@@ -3,6 +3,8 @@ package com.letv.mas.caller.iptv.tvproxy.apicommon.interceptor;
 import com.letv.mas.caller.iptv.tvproxy.common.constant.CommonConstants;
 import com.letv.mas.caller.iptv.tvproxy.common.plugin.SessionCache;
 import com.letv.mas.caller.iptv.tvproxy.common.util.TerminalUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -14,12 +16,13 @@ import javax.servlet.http.HttpServletResponse;
  * @author KevinYi
  */
 public class HttpParameterInterceptor extends HandlerInterceptorAdapter {
-
+    Log logger = LogFactory.getLog(HttpParameterInterceptor.class);
     /*@Autowired(required = false)
     private SessionCache sessionCache;*/
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        logger.info(" HttpParameterInterceptor preHandle ----- ");
         // 获取客户端ip，便于后面封装到CommonParam中
         // HandlerMethod method = (HandlerMethod) handler;
         // HttpParameterInterceptorAnnotation annotation = method

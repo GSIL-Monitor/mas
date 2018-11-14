@@ -12,6 +12,7 @@ import com.letv.mas.caller.iptv.tvproxy.common.util.TerminalUtil;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -24,7 +25,7 @@ import java.util.Map;
 /**
  * API层HTTP参数拦截器，用于访问权限验证
  */
-
+@Component
 public class AuthorizedInterceptor extends HandlerInterceptorAdapter {
 
     Log logger = LogFactory.getLog(AuthorizedInterceptor.class);
@@ -43,6 +44,7 @@ public class AuthorizedInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        logger.info(" AuthorizedInterceptor preHandle ----- ");
         HandlerMethod method = (HandlerMethod) handler;
         AuthorizedInterceptorAnnotation annotation = method.getMethodAnnotation(AuthorizedInterceptorAnnotation.class);
         if (annotation != null) {

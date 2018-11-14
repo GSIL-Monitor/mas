@@ -9,7 +9,7 @@ spring:
       retry:
         enabled: true
   profiles:
-    include: manager,omp,config,zuul,trace,biz,db
+    include: manager,omp,config,zuul,trace,biz,db,redis
 
 server:
   port: ${SERVER_PORT}

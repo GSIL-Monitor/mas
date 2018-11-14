@@ -82,7 +82,7 @@ public class SearchService extends BaseService {
      *            检索语言环境
      * @return
      */
-    public GenericServingResponse searchTypes2(String from, String dt, Integer page, Integer pageSize,
+    /*public GenericServingResponse searchTypes2(String from, String dt, Integer page, Integer pageSize,
                                                          String word, String categoryId, String ph, String searchContent, String id, String splatid,
                                                          Integer channelId, String leIds, String productId, String pushChild, String repo_type, String pcp,
                                                          CommonParam commonParam) {
@@ -90,6 +90,78 @@ public class SearchService extends BaseService {
                 categoryId, null, ph, "1", 1, null, searchContent, splatid, leIds, null, repo_type, null, null, null,
                 null, null, null, null, productId, pushChild, pcp, commonParam);
         return result;
+    }*/
+
+    /**
+     * 复合检索
+     * @param channelId
+     * @param searchRequest
+     *            检索条件
+     * @param locale
+     *            检索语言环境
+     * @return
+     */
+    public PageCommonResponse<AlbumInfoDto> searchTypes2(String from, String dt, Integer page, Integer pageSize,
+                                                         String word, String categoryId, String ph, String searchContent, String id, String splatid,
+                                                         Integer channelId, String leIds, String productId, String pushChild, String repo_type, String pcp,
+                                                         CommonParam commonParam) {
+        PageControl<AlbumInfoDto> pageControl = new PageControl<AlbumInfoDto>(pageSize, page);
+        searchContent = this.dealSearchSort4Addon(searchContent, productId, commonParam);
+        PageCommonResponse<AlbumInfoDto> response = new PageCommonResponse<AlbumInfoDto>(pageControl);
+        GenericServingResponse result = this.facadeTpDao.getSearchTpDao().search(from, dt, page, pageSize, word,
+                categoryId, null, ph, "1", 1, null, searchContent, splatid, leIds, null, repo_type, null, null, null,
+                null, null, null, null, productId, pushChild, pcp, commonParam);
+        // id不为空，说明为二级标签访问（数据库加上了该字段）
+        if (page == 1 && !StringUtil.isBlank(id)) {
+            String key = CacheContentConstants.SEARCHTYPES_ID + id + "_" + page;
+            Long startTime = SearchTypesStartTime.get(key);
+            if (result == null) {
+                result = this.facadeCacheDao.getSearchCacheDao().getSearchType(id, page);
+            } else if ((startTime == null || System.currentTimeMillis() - startTime > 300 * 1000)
+                    && result.getSearch_response() != null
+                    && !CollectionUtils.isEmpty(result.getSearch_response().getServing_result_list())) {
+                SearchTypesStartTime.put(key, new Long(System.currentTimeMillis()));
+                this.facadeCacheDao.getSearchCacheDao().setSearchType(id, page, result);
+            }
+        }
+        if (result == null || result.getSearch_response() == null
+                || CollectionUtils.isEmpty(result.getSearch_response().getServing_result_list())) {
+            // 兼容客户端，数据位空时，返回状态标志位为1
+            response.setResultStatus(1);
+            response.setErrCode(SearchConstant.SEARCH_ERROR_RESULT_NULL);
+            response.setErrMsg(MessageUtils.getMessage(SearchConstant.SEARCH_ERROR_RESULT_NULL, commonParam.getWcode()));
+            return response;
+        }
+        String defaultStream = this.facadeCacheDao.getChannelCacheDao().getChannelDefaultStreamById(
+                String.valueOf(channelId));
+        String defaultStreamName = LetvStreamCommonConstants.getStreamName(defaultStream, commonParam.getLangcode());
+        List<AlbumInfoDto> videoList = this
+                .parseSearchMixResult2(result, defaultStream, defaultStreamName, commonParam);
+        pageControl = new PageControl<AlbumInfoDto>(pageSize, page, result.getSearch_response().getData_count());
+        pageControl.setList(videoList);
+        response = new PageCommonResponse<AlbumInfoDto>(pageControl);
+        String cid = categoryId;
+        // 检索条件中可能会拼categoryId, 例如searchContent="-1:2;3:50041";
+        try {
+            if ((StringUtil.isBlank(cid) || StringUtil.toInteger(cid, -1) == 0) && searchContent != null) {
+                String[] params = searchContent.split(";");
+                if (params != null) {
+                    for (String str : params) {
+                        String[] sc = str.split(":");
+                        if ("-1".equals(sc[0])) {
+                            cid = sc[1];
+                            break;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+        }
+        if ("CN".equalsIgnoreCase(commonParam.getWcode()) && response != null && response.getItems() != null
+                && response.getItems().size() > 0 && StringUtil.isNotBlank(cid) && !cid.contains(",")) { // 只设置cid为单个频道的
+            this.changeSubTitle(response.getItems(), StringUtil.toInteger(cid));
+        }
+        return response;
     }
 
     @Autowired(required = false)

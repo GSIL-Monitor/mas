@@ -38,6 +38,8 @@
         <jjwt.version>0.9.1</jjwt.version>
         <!--idea plugin: https://github.com/mplushnikov/lombok-intellij-plugin/releases-->
         <lombok.version>1.16.20</lombok.version>
+        <redis.version>2.1.0.RELEASE</redis.version>
+        <jedis.version>2.9.0</jedis.version>
     </properties>
 
     <dependencies>
@@ -157,6 +159,25 @@
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
         </dependency>
+
+        <!--https://docs.spring.io/spring-data/redis/docs/2.1.2.RELEASE/reference/html/#new-in-2.1.0-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>${redis.version}</version>
+            <!-- 排除lettuce包，使用jedis代替-->
+            <!--<exclusions>-->
+            <!--<exclusion>-->
+            <!--<groupId>io.lettuce</groupId>-->
+            <!--<artifactId>lettuce-core</artifactId>-->
+            <!--</exclusion>-->
+            <!--</exclusions>-->
+        </dependency>
+        <!--<dependency>-->
+        <!--<groupId>redis.clients</groupId>-->
+        <!--<artifactId>jedis</artifactId>-->
+        <!--<version>${jedis.version}</version>-->
+        <!--</dependency>-->
     </dependencies>
 
     <dependencyManagement>

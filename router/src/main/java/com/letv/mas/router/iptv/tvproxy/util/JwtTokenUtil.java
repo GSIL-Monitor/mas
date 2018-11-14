@@ -33,16 +33,22 @@ public class JwtTokenUtil {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
+    public String genToken(String code) {
+        return this.genToken(code, this.secretKey);
+    }
+
     /**
      * 根据appCode生成签名
      *
      * @param code
+     * @param code:  接入平台分配的secretKey
      * @return
      */
-    public String genToken(String code) {
+    public String genToken(String code, String secretKey) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + expireTime * 1000);
         Map<String, Object> claims = new HashMap<String, Object>();
+
         claims.put(CLAIM_KEY_CODE, code);
         claims.put(CLAIM_KEY_DATE, now);
         return Jwts.builder()
@@ -53,14 +59,19 @@ public class JwtTokenUtil {
                 .compact();
     }
 
+    public boolean validateToken(String token, String code) {
+        return this.validateToken(token, code, this.secretKey);
+    }
+
     /**
      * 根据token（可直接为http请求头里Authorization项带Bearer的值）及code进行验证
      *
      * @param token: 接入平台为app生成的签名
      * @param code:  接入平台分配的appCode
+     * @param code:  接入平台分配的secretKey
      * @return
      */
-    public boolean validateToken(String token, String code) {
+    public boolean validateToken(String token, String code, String secretKey) {
         boolean ret = false;
 
         if (StringUtils.isBlank(token)) {
@@ -70,7 +81,7 @@ public class JwtTokenUtil {
                 token = token.substring(7, token.length());
             }
         }
-        Claims claims = this.getClaimsFromToken(token);
+        Claims claims = this.getClaimsFromToken(token, secretKey);
         if (null != claims) {
             Date date = null;
             if (null != claims.getExpiration()) {
@@ -88,13 +99,17 @@ public class JwtTokenUtil {
         return ret;
     }
 
+    public String refreshToken(String token) {
+        return this.refreshToken(token, this.secretKey);
+    }
+
     /**
      * 根据token（可直接为http请求头里Authorization项带Bearer的值）刷新签名
      *
      * @param token: 接入平台为app生成的签名
      * @return
      */
-    public String refreshToken(String token) {
+    public String refreshToken(String token, String secretKey) {
         String ret = null;
 
         try {
@@ -106,9 +121,11 @@ public class JwtTokenUtil {
                 }
             }
 
-            final Claims claims = getClaimsFromToken(token);
+            final Claims claims = getClaimsFromToken(token, secretKey);
             if (null != claims) {
-                ret = this.genToken((String) claims.get(CLAIM_KEY_CODE));
+                ret = this.genToken((String) claims.get(CLAIM_KEY_CODE), secretKey);
+            } else {
+
             }
         } catch (Exception e) {
         }
@@ -116,7 +133,7 @@ public class JwtTokenUtil {
         return ret;
     }
 
-    private Claims getClaimsFromToken(String token) {
+    private Claims getClaimsFromToken(String token, String secretKey) {
         Claims claims = null;
 
         try {

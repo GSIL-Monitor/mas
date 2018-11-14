@@ -44,10 +44,10 @@ public class ConfigConfigguration {
         return configOperationUtil;
     }
 
-    @Bean
+    /*@Bean
     LetvExceptionResolver getLetvExceptionResolver(){
         return new LetvExceptionResolver();
-    }
+    }*/
 
     @Bean
     @Primary

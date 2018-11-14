@@ -1,8 +1,100 @@
 var url = 'http://10.112.32.141:8901';
+var curRow = {};
 $(function () {
-    $('#acl').datagrid({
-        loader:function(param,success,error){
-            //跨域请求数据
+    initTable();
+});
+function homePage() {
+    $('#tb_acl').bootstrapTable('destroy');
+    initTable();
+}
+function newlyAdd() {
+    document.getElementById('addWindow').style.display='block';
+    document.getElementById("id").value="";
+    document.getElementById("name").value="";
+    document.getElementById("path").value="";
+    document.getElementById("_parentId").value="";
+}
+function updateDate() {
+    window.setTimeout(function () {
+        var table = $('#tb_acl').bootstrapTable('getSelections');
+        document.getElementById('addWindow').style.display='block';
+        document.getElementById("id").value=table[0].id;
+        document.getElementById("name").value=table[0].name;
+        document.getElementById("path").value=table[0].path;
+        document.getElementById("_parentId").value=table[0]._parentId;
+    }, 100);
+}
+function saveDate() {
+    var id = document.getElementById("id").value;
+    var name = document.getElementById("name").value;
+    var path = document.getElementById("path").value;
+    var _parentId = document.getElementById("_parentId").value;
+    console.log(id+name+path+_parentId);
+    $.ajax({
+        async: false,
+        url: url + "/acl/updateAcl",
+        type: "post",
+        dataType: 'jsonp',
+        jsonp: "jsoncallback",
+        jsonpCallback: 'callback',
+        data: {
+            id: id,
+            name: name,
+            path: path,
+            _parentId: _parentId
+        },
+        success: function (res) {
+            if (res == 1) {
+                document.getElementById('addWindow').style.display='none';
+                alert('保存成功');
+            } else {
+                document.getElementById('addWindow').style.display='none';
+                alert('保存失败');
+            }
+            homePage();
+        },
+        error: function (xhr) {
+            console.log(xhr);
+            homePage();
+        }
+    })
+}
+function deleteDate() {
+    if(confirm("确定删除该权限?")){
+        //点击确定后操作
+        window.setTimeout(function () {
+            var table = $('#tb_acl').bootstrapTable('getSelections');
+            $.ajax({
+                async: false,
+                url: url+"/acl/deleteAcl",
+                type: "post",
+                dataType: 'jsonp',
+                jsonp: "jsoncallback",
+                jsonpCallback: 'callback',
+                data: {
+                    id: table[0].id
+                },
+                success: function (res) {
+                    if (res == 1) {
+                        alert('删除成功');
+                    } else {
+                        alert('删除失败');
+                    }
+                    $('#tb_acl').bootstrapTable('destroy');
+                    initTable();
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                    $('#tb_acl').bootstrapTable('destroy');
+                    initTable();
+                }
+            })
+        }, 100);
+    }
+}
+function initTable() {
+    $("#tb_acl").bootstrapTable({
+        ajax : function (request) {
             $.ajax({
                 url: url+"/acl/allAcls",
                 type:"get",
@@ -10,153 +102,87 @@ $(function () {
                 jsonp:"jsoncallback",
                 jsonpCallback:'callback',
                 data:{
-                    pageNum: $("#acl" ).datagrid("getPager" ).data("pagination" ).options.pageNumber,
-                    pageSize: $("#acl" ).datagrid("getPager" ).data("pagination" ).options.pageSize
+                    pageNum: 1,
+                    pageSize: 50
                 },
                 success: function (res) {
-                    success(res);
+                    request.success({
+                        row : res
+                    });
+                    $('#tb_acl').bootstrapTable('load', res['rows']);
                 },
                 error: function (xhr) {
                     error(xhr.responseText);
                 }
             })
         },
-        singleSelect:true,
-        columns:[[
-            {field:'id',title:'Id',width:40},
-            {field:'name',title:'Name',width:160,editor:{
-                    type:'text',
-                    options:{
-                        require:true
-                    }
-                }},
-            {field:'path',title:'Path',width:340,editor: {
-                    type: 'text'
-                }},
-            {field:'_parentId',title:'ParentId',width:77,editor: {
-                    type: 'text',
-                    options:{
-                        require:true
-                    }
-                }}
-        ]],
-        pagination : true,
+        dataType: 'jsonp',
+        // toolbar: "#toolbar",
+        idField: "id",
+        pagination: true,
         pageSize : 10,
         pageList : [10,20,30,40,50],
-        fit : true,
-        rownumbers:true,
-        //结束编辑后触发的事件
-        onAfterEdit:function(rowIndex,rowData,changes){
-            //发送ajax请求，将改后的数据提交到服务器，修改数据库
-            $.ajax({
-                async:false,
-                url:url+"/acl/updateAcl",
-                type:"post",
-                dataType: 'jsonp',
-                jsonp:"jsoncallback",
-                jsonpCallback:'callback',
-                data:{
-                    id:rowData.id,
-                    name:rowData.name,
-                    path:rowData.path,
-                    _parentId:rowData._parentId
-                },
-                success: function (res) {
-                    if(res == 1){
-                        $.messager.show({
-                            title:'修改状态',
-                            msg:'修改成功',
-                            timeout:5000,
-                            showType:'slide'
-                        });
-                    }else {
-                        $.messager.show({
-                            title:'修改状态',
-                            msg:'修改失败',
-                            timeout:5000,
-                            showType:'slide'
-                        });
-                    }
-                    $("#acl").datagrid('reload');
-                },
-                error: function (xhr) {
-                    console.log(xhr.responseText);
-                    $("#acl").datagrid('reload');
-                }
-            });
-            // console.log(rowData.code);
+        singleSelect: true,
+        // showRefresh: true,
+        // search: true,
+        clickToSelect: true,
+        queryParams: function (param) {
+            return {
+                pageNum: 1,
+                pageSize: 10
+            };
         },
-        //定义表格的工具栏
-        toolbar:[
-            {text:'添加',iconCls:'icon-add',handler:function(){
-                    //添加一行
-                    $("#acl").datagrid("insertRow",{
-                        index:0,//在第一行插入
-                        row:{}//空行
-                    });
-                    myIndex = 0;
-                    //开启编辑
-                    $("#acl").datagrid("beginEdit",0);
-                }},//每个json表示一个按钮
-            {text:'删除',iconCls:'icon-remove',handler:function(){
-                    $.messager.confirm('确认','您确认想要删除记录吗？',function(r){
-                        if (r){
-                            //获得当前选中行的索引
-                            var rows = $("#acl").datagrid("getSelections");
-                            if(rows.length == 1){
-                                var row = rows[0];
-                                myIndex = $("#acl").datagrid("getRowIndex",row);
-                                //删除行
-                                $("#acl").datagrid("deleteRow",myIndex);
-                                if(row.id != undefined){
-                                    $.ajax({
-                                        async:false,
-                                        url:url+"/acl/deleteAcl",
-                                        type:"post",
-                                        dataType: 'jsonp',
-                                        jsonp:"jsoncallback",
-                                        jsonpCallback:'callback',
-                                        data:{
-                                            id:row.id
-                                        },
-                                        success: function (res) {
-                                            if(res == 1){
-                                                $.messager.show({
-                                                    title:'删除状态',
-                                                    msg:'删除成功',
-                                                    timeout:5000,
-                                                    showType:'slide'
-                                                });
-                                            }else {
-                                                $.messager.show({
-                                                    title:'删除状态',
-                                                    msg:'删除失败',
-                                                    timeout:5000,
-                                                    showType:'slide'
-                                                });
-                                            }
-                                        },
-                                        error: function (xhr) {
-                                            console.log(xhr.responseText);
-                                        }
-                                    });
-                                }
-                            }
-                        }
-                    });
-                }},
-            {text:'保存',iconCls:'icon-save',handler:function(){
-                    //结束编辑
-                    $("#acl").datagrid("endEdit",myIndex);
-                }},
-            {text:'修改',iconCls:'icon-edit',handler:function(){
-                    //获得当前选中行的索引
-                    var rows = $("#acl").datagrid("getSelections");
-                    if(rows.length == 1){
-                        myIndex = $("#acl").datagrid("getRowIndex",rows[0]);
-                        $("#acl").datagrid("beginEdit",myIndex);
-                    }
-                }}
-        ]
+        columns: [{
+            checkbox: true
+        }, {
+            field: "id",
+            title: "ID"
+            // formatter: function (value, row, index) {
+            //     return "<a href=\"#\" name=\"UserName\" data-type=\"text\" data-pk=\"" + row.id + "\" data-title=\"用户名\">" + value + "</a>";
+            // }
+        }, {
+            field: "name",
+            title: "Name"
+        }, {
+            field: "path",
+            title: "Path"
+        },{
+            field: "_parentId",
+            title: "ParentId"
+        },{
+            title: '操作',
+            field: 'operate',
+            //row.id+\",\"+row.name+\",\"+row.path+\",\"+row._parentId
+            formatter: function (value, row, index) {
+                    return "<button onclick='updateDate()' class='btn btn-xs blue'><i class='glyphicon glyphicon-pencil'></i> 修改</button>"
+                        +"&nbsp;&nbsp;&nbsp;&nbsp;<button onclick='deleteDate()' class='btn btn-xs red'><i class='fa fa-trash-o'></i> 删除</button>";
+                }
+        }],
+        onClickRow: function (row, $element) {
+            curRow = row;
+        }
+        // ,
+        // onLoadSuccess: function (aa, bb, cc) {
+        //     $("#tb_user a").editable({
+        //         url: function (params) {
+        //             var sName = $(this).attr("name");
+        //             curRow[sName] = params.value;
+        //             $.ajax({
+        //                 type: 'POST',
+        //                 url: "/Editable/Edit",
+        //
+        //                 data: curRow,
+        //                 dataType: 'JSON',
+        //                 success: function (data, textStatus, jqXHR) {
+        //                     alert('保存成功！');
+        //                 },
+        //                 error: function () {
+        //                     alert("error");
+        //                 }
+        //             });
+        //         },
+        //         type: 'text'
+        //     });
+        // }
     });
-});
+}

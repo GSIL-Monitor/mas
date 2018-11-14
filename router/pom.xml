@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>mas-router-tvproxy</name>
-    <description>Project for the tvproxy based on mas router with apollo-config</description>
+    <description>Project for the tvproxy based on mas router with SC-config</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -38,7 +38,8 @@
         <jjwt.version>0.9.1</jjwt.version>
         <!--idea plugin: https://github.com/mplushnikov/lombok-intellij-plugin/releases-->
         <lombok.version>1.16.20</lombok.version>
-        <mas.apollo>1.1.2-SNAPSHOT</mas.apollo>
+        <redis.version>2.1.0.RELEASE</redis.version>
+        <jedis.version>2.9.0</jedis.version>
     </properties>
 
     <dependencies>
@@ -62,16 +63,9 @@
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>org.springframework.cloud</groupId>-->
-            <!--<artifactId>spring-cloud-starter-config</artifactId>-->
-        <!--</dependency>-->
         <dependency>
-            <groupId>com.letv.micro.apollo</groupId>
-            <artifactId>micro-apollo-spring-boot-starter</artifactId>
-            <version>${mas.apollo}</version>
-            <!--<scope>system</scope>-->
-            <!--<systemPath>${project.basedir}/../micro-apollo-spring-boot-starter/target/micro-apollo-spring-boot-starter-1.1.2-SNAPSHOT.jar</systemPath>-->
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -97,12 +91,6 @@
             <version>${mas.common}</version>
             <!--<scope>system</scope>-->
             <!--<systemPath>${project.basedir}/../common/target/common-1.0-SNAPSHOT.jar</systemPath>-->
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework.cloud</groupId>
-                    <artifactId>spring-cloud-starter-config</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <!--letv工具包（E）-->
         <dependency>
@@ -172,10 +160,24 @@
             <version>${lombok.version}</version>
         </dependency>
 
+        <!--https://docs.spring.io/spring-data/redis/docs/2.1.2.RELEASE/reference/html/#new-in-2.1.0-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>${redis.version}</version>
+            <!-- 排除lettuce包，使用jedis代替-->
+            <!--<exclusions>-->
+            <!--<exclusion>-->
+            <!--<groupId>io.lettuce</groupId>-->
+            <!--<artifactId>lettuce-core</artifactId>-->
+            <!--</exclusion>-->
+            <!--</exclusions>-->
         </dependency>
+        <!--<dependency>-->
+        <!--<groupId>redis.clients</groupId>-->
+        <!--<artifactId>jedis</artifactId>-->
+        <!--<version>${jedis.version}</version>-->
+        <!--</dependency>-->
     </dependencies>
 
     <dependencyManagement>
@@ -242,6 +244,10 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
+                    <!--剔除包内部分包含外部差异化依赖的类文件-->
+                    <excludes>
+                        <exclude>**/config/ZuulConfig.java</exclude>
+                    </excludes>
                     <showWarnings>true</showWarnings>
                     <skip>true</skip>
                 </configuration>

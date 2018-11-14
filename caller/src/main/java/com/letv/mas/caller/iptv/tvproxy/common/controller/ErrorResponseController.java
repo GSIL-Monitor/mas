@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import javax.servlet.http.HttpServletRequest;
 
 //TODO 1.统一输出日志文件到error.log 2.增加异常堆栈信息
-@Controller
-@Component
+//@Controller
+//@Component
 public class ErrorResponseController extends BaseController {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
