@@ -16,6 +16,7 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.5.13.RELEASE</version>
+        <!--<version>2.1.0.RELEASE</version>-->
         <relativePath/>
     </parent>
 
@@ -24,8 +25,8 @@
         <maven.compiler.plugin>2.5.1</maven.compiler.plugin>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <org.slf4j>1.6.6</org.slf4j>
-        <log4j>1.2.17</log4j>
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
         <fastjson>1.2.47</fastjson>
         <mas.common>1.0-SNAPSHOT</mas.common>
         <spring.cloud>Edgware.SR3</spring.cloud>
@@ -40,9 +41,39 @@
         <mas.apollo>1.1.2-SNAPSHOT</mas.apollo>
         <redis.version>2.1.0.RELEASE</redis.version>
         <jedis.version>2.9.0</jedis.version>
+        <lettuce.version>5.1.2.RELEASE</lettuce.version>
     </properties>
 
     <dependencies>
+        <!-- logback (B) -->
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <!-- spring使用commons-logging替换成slf4j，使得框架和集成者同时可打印 -->
+        <!-- https://mvnrepository.com/artifact/org.slf4j/jcl-over-slf4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+        <!-- logback-classic包含: slf4j-api.jar,logback-core.jar,logback-classic.jar -->
+        <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <!-- 官方spring支持扩展 -->
+        <!-- https://mvnrepository.com/artifact/org.logback-extensions/logback-ext-spring -->
+        <dependency>
+            <groupId>org.logback-extensions</groupId>
+            <artifactId>logback-ext-spring</artifactId>
+            <version>0.1.5</version>
+        </dependency>
+        <!-- logback (E) -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-zuul</artifactId>
@@ -180,18 +211,46 @@
             <version>${redis.version}</version>
             <!-- 排除lettuce包，使用jedis代替-->
             <!--<exclusions>-->
-                <!--<exclusion>-->
-                    <!--<groupId>io.lettuce</groupId>-->
-                    <!--<artifactId>lettuce-core</artifactId>-->
-                <!--</exclusion>-->
+            <!--<exclusion>-->
+            <!--<groupId>io.lettuce</groupId>-->
+            <!--<artifactId>lettuce-core</artifactId>-->
+            <!--</exclusion>-->
             <!--</exclusions>-->
+            <exclusions>
+                <exclusion>
+                    <groupId>redis.clients</groupId>
+                    <artifactId>jedis</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>3.2.2.RELEASE</version>
+        </dependency>
+        <!--https://mvnrepository.com/artifact/org.apache.commons/commons-pool2-->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.6.0</version>
         </dependency>
         <!--<dependency>-->
-            <!--<groupId>redis.clients</groupId>-->
-            <!--<artifactId>jedis</artifactId>-->
-            <!--<version>${jedis.version}</version>-->
+        <!--<groupId>redis.clients</groupId>-->
+        <!--<artifactId>jedis</artifactId>-->
+        <!--<version>${jedis.version}</version>-->
         <!--</dependency>-->
-
+        <!--<dependency>-->
+        <!--<groupId>io.lettuce</groupId>-->
+        <!--<artifactId>lettuce-core</artifactId>-->
+        <!--<version>${lettuce.version}</version>-->
+        <!--</dependency>-->
+        <!--spring-data 2.0以下版本，需要使用此包，否则会报com.lambdaworks.redis.AbstractRedisClient异常！-->
+        <!--https://paluch.biz/blog/173-redis-client-lettuce-5-ga-released.html-->
+        <dependency>
+            <groupId>biz.paluch.redis</groupId>
+            <artifactId>lettuce</artifactId>
+            <version>4.5.0.Final</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>

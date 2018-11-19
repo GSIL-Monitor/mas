@@ -18,6 +18,7 @@ spring:
       # 激活定时任务，当GIT版本发生变更后加载最新配置上下文
       watcher:
         enabled: false
+
 info:
   app:
     name: ${spring.application.name}

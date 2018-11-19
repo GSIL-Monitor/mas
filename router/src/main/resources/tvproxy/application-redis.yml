@@ -1,12 +1,17 @@
 spring:
   # 默认Lettuce客户端（可选jedis，pom依赖参考注释部分），基于Netty多线程并发，伸缩式动态扩展连接！
+#  spring.data.redis.repositories.enabled=true
+  data:
+    redis:
+      repositories:
+        enabled: true
   redis:
     # 用于Connection Factory的数据库索引
     database: 1
-    host: ${REDIS_M_HOST:10.58.89.189}
-    port: ${REDIS_M_PORT:6379}
+    host: ${REDIS_M_NODES:10.58.89.189:6379}
+    password: ${REDIS_M_PASSWORD:}
     # 连接超时时间 单位 ms（毫秒）
-    timeout: 3000
+    timeout: 2000
     pool:
       # 连接池中的最大空闲连接，默认值8
       max-idle: 8
@@ -16,9 +21,25 @@ spring:
       max-active: 50
       # 等待可用连接的最大时间 单位 ms（毫秒），默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException
       max-wait: 1000
-    # redis哨兵主从设置
+      isBlockWhenExhausted: false
+      isTestOnBorrow: false
+      isTestOnReturn: true
+      isTestWhileIdle: false
+      timeBetweenEvictionRunsMillis: 30000
+      minEvictableIdleTimeMillis: 1800000
+    cluster:
+#      nodes: ${REDIS_M_NODES:10.58.89.189:6379},${REDIS_S_NODES:10.58.89.189:6379}
+      master:
+        host: ${REDIS_M_NODES:10.58.89.189:6379}
+        password: ${REDIS_M_PASSWORD:}
+        timeout: 2000
+      slave:
+        host: ${REDIS_S_NODES:10.58.89.189:6379}
+        password: ${REDIS_S_PASSWORD:}
+        timeout: 2000
+#    # redis哨兵主从设置
 #    sentinel:
-      # master服务器的名字
+#      # master服务器的名字
 #      master: master1
-      # redis-sentinel的配置地址和端口
-#      nodes: 127.0.0.1:26377,127.0.0.1:26378,127.0.0.1:26379
+#      # redis-sentinel的配置地址和端口，多个逗号分割
+#      nodes: ${REDIS_S_NODES:10.58.89.189:6379}

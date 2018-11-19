@@ -1,4 +1,4 @@
-package com.letv.mas.caller.iptv.tvproxy.apicommon.config;
+package com.letv.mas.caller.iptv.tvproxy.common.config;
 
 import com.alibaba.fastjson.support.spring.FastJsonpResponseBodyAdvice;
 import org.springframework.web.bind.annotation.ControllerAdvice;

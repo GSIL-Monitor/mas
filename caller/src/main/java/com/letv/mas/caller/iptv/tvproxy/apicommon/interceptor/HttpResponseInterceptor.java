@@ -27,7 +27,7 @@ public class HttpResponseInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        logger.info(" HttpResponseInterceptor preHandle ----- ");
+        //logger.info(" HttpResponseInterceptor preHandle ----- ");
         request.setAttribute("requestStartTime", System.currentTimeMillis());
         return super.preHandle(request, response, handler);
     }

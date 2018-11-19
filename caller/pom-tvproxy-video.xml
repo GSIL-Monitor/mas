@@ -26,7 +26,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <!-- 插件版本 -->
-        <org.slf4j>1.6.6</org.slf4j>
+        <org.slf4j>1.7.25</org.slf4j>
         <log4j>1.2.17</log4j>
         <fastjson>1.2.47</fastjson>
         <grpc.stater.version>1.0-SNAPSHOT</grpc.stater.version>
@@ -53,7 +53,16 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-hystrix</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.2.3</version>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -105,7 +114,11 @@
         <!--sleuth & zipkin-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-zipkin</artifactId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-sleuth-zipkin</artifactId>
         </dependency>
 
         <!--config-->
@@ -342,7 +355,7 @@
         <profile>
             <id>pre</id>
             <properties>
-                <profiles.active>pre</profiles.active>
+                <profiles.active>prod</profiles.active>
             </properties>
         </profile>
         <!--生产环境-->

@@ -22,7 +22,7 @@ public class CheckLoginInterceptor extends HandlerInterceptorAdapter {
      */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        logger.info(" CheckLoginInterceptor preHandle ----- ");
+        //logger.info(" CheckLoginInterceptor preHandle ----- ");
         HandlerMethod method = (HandlerMethod) handler;
         CheckLoginInterceptorAnnotation annotation = method.getMethodAnnotation(CheckLoginInterceptorAnnotation.class);
         if (annotation != null) {

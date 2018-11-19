@@ -196,3 +196,10 @@ Root POM选取 caller/pom-tvproxy-user.xml
 [img-zipkin-workflow]: ./docs/img/sleuth-zipkin-services.jpg "zipkin工作图解"
 [img-spring-cloud-fw-plan]: ./docs/img/spring-cloud-fw-plan.jpg "SpringCloud框架计划"
 [img-letv-mas-fw]: ./docs/img/letv-mas-fw.jpg "MAS框架设计"
+
+dbpool: c3p0 => druid
+redis client: jedis => lettuce
+api-authrization: jwt & oauth2
+api-doc: swagger
+tools : collection-guava, lombok
+log: log4j => logback

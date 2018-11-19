@@ -52,7 +52,7 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %level [%class:%line] %logger - %m%n</pattern>
         </encoder>
     </appender>
-    <appender name="SERVER-API_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="SERVER-API_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="SERVER-API" />
     </appender>
 
@@ -92,7 +92,7 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %level [%class:%line] %logger - %m%n</pattern>
         </encoder>
     </appender>
-    <appender name="errorLog_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="errorLog_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="errorLog" />
     </appender>
     <appender name="CALLER_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -126,7 +126,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="CALLER_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="CALLER_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="CALLER_ROLLING_FILE" />
     </appender>
 
@@ -150,7 +150,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="CACHE_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="CACHE_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="CACHE_ROLLING_FILE" />
     </appender>
     <appender name="HTTP_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -173,7 +173,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="HTTP_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="HTTP_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="HTTP_ROLLING_FILE" />
     </appender>
     <appender name="SERVICE_STATUS_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -196,7 +196,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="SERVICE_STATUS_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="SERVICE_STATUS_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="SERVICE_STATUS_ROLLING_FILE" />
     </appender>
 
@@ -212,13 +212,13 @@
         </rollingPolicy>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <!-- 立即IO输出，关闭走流缓存8K -->
-            <immediateFlush>true</immediateFlush>
+            <immediateFlush>false</immediateFlush>
             <pattern>%m%n</pattern>
         </encoder>
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="MYSQL_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="MYSQL_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="MYSQL_ROLLING_FILE" />
     </appender>
     <appender name="API_SWITCH_MONITOR_STATUS_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -241,7 +241,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="API_SWITCH_MONITOR_STATUS_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="API_SWITCH_MONITOR_STATUS_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="API_SWITCH_MONITOR_STATUS_ROLLING_FILE" />
     </appender>
     <appender name="HYSTRIX_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -264,7 +264,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="HYSTRIX_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="HYSTRIX_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="HYSTRIX_ROLLING_FILE" />
     </appender>
     <appender name="HYSTRIX_DETAIL_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -287,7 +287,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="HYSTRIX_DETAIL_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="HYSTRIX_DETAIL_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0" neverBlock="true" includeCallerData="false">
         <appender-ref ref="HYSTRIX_DETAIL_ROLLING_FILE" />
     </appender>
     <appender name="SLOW_LOG_ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -310,7 +310,7 @@
         <!-- 追加方式记录日志 -->
         <append>true</append>
     </appender>
-    <appender name="SLOW_LOG_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="1000000" discardingThreshold="0" includeCallerData="false">
+    <appender name="SLOW_LOG_ROLLING_FILE_ASYNC" class="ch.qos.logback.classic.AsyncAppender" queueSize="100000" discardingThreshold="0"  neverBlock="true" includeCallerData="false">
         <appender-ref ref="SLOW_LOG_ROLLING_FILE" />
     </appender>
     <root level="${logLevel}">

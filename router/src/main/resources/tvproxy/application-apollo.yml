@@ -12,6 +12,10 @@ spring:
     loadbalancer:
       retry:
         enabled: true
+  data:
+    redis:
+      repositories:
+        enabled: false
 
 app:
   id: letv-mas-router-tvproxy

@@ -22,7 +22,7 @@ public class HttpParameterInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        logger.info(" HttpParameterInterceptor preHandle ----- ");
+        //logger.info(" HttpParameterInterceptor preHandle ----- ");
         // 获取客户端ip，便于后面封装到CommonParam中
         // HandlerMethod method = (HandlerMethod) handler;
         // HttpParameterInterceptorAnnotation annotation = method

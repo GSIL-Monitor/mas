@@ -44,7 +44,7 @@ public class AuthorizedInterceptor extends HandlerInterceptorAdapter {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        logger.info(" AuthorizedInterceptor preHandle ----- ");
+        //logger.info(" AuthorizedInterceptor preHandle ----- ");
         HandlerMethod method = (HandlerMethod) handler;
         AuthorizedInterceptorAnnotation annotation = method.getMethodAnnotation(AuthorizedInterceptorAnnotation.class);
         if (annotation != null) {

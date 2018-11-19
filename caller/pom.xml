@@ -363,7 +363,7 @@
         <!--默认资源目录-->
         <resources>
             <resource>
-                <directory>${basedir}/src/main/resources/tvproxy/video</directory>
+                <directory>${basedir}/src/main/resources/tvproxy/vip</directory>
             </resource>
             <!--<resource>
                 <directory>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/user</directory>
@@ -397,13 +397,17 @@
                             <sources>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/common</source>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/apicommon</source>
-                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/channel</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/cashier</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/desk</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/music</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/search</source>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/notification</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/user</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/channel</source>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/live</source>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/recommendation</source>
-                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/video</source>
-                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/user</source>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/terminal</source>
+                                <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/video</source>
                                 <source>${basedir}/src/main/java/com/letv/mas/caller/iptv/tvproxy/vip</source>
                             </sources>
                         </configuration>
@@ -477,7 +481,7 @@
                                     <filtering>true</filtering>
                                 </resource>
                                 <resource>
-                                    <directory>src/main/resources/tvproxy/video</directory>
+                                    <directory>src/main/resources/tvproxy/vip</directory>
                                     <filtering>true</filtering>
                                     <includes>
                                         <include>**/*.yml</include>
