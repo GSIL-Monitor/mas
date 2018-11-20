@@ -16,6 +16,7 @@ import com.letv.mas.caller.iptv.tvproxy.common.model.dao.tp.search.response.Sear
 import com.letv.mas.caller.iptv.tvproxy.common.model.dao.tp.search.response.WebsiteTpResponse;
 import com.letv.mas.caller.iptv.tvproxy.common.model.dto.Response;
 import com.letv.mas.caller.iptv.tvproxy.common.plugin.CommonParam;
+import com.letv.mas.caller.iptv.tvproxy.common.util.StringUtil;
 import com.letv.mas.caller.iptv.tvproxy.search.constant.SearchConstant;
 import com.letv.mas.caller.iptv.tvproxy.search.constant.SearchTpConstant;
 import com.letv.mas.caller.iptv.tvproxy.search.model.bean.bo.SearchPageResponse;
@@ -24,7 +25,6 @@ import com.letv.mas.caller.iptv.tvproxy.search.model.dto.SearchResultsDto.Vienti
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.lang.StringUtils;
-import org.eclipse.jetty.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;

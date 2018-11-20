@@ -21,25 +21,34 @@ spring:
       max-active: 50
       # 等待可用连接的最大时间 单位 ms（毫秒），默认值为-1，表示永不超时。如果超过等待时间，则直接抛出JedisConnectionException
       max-wait: 1000
+      # 连接耗尽时是否阻塞, false报异常,true阻塞直到超时, 默认true
       isBlockWhenExhausted: false
+      # 在borrow一个实例时，是否提前进行alidate操作；如果为true，则得到的实例均是可用的，默认false
       isTestOnBorrow: false
+      # 调用returnObject方法时，是否进行有效检查，默认false
       isTestOnReturn: true
+      # 在空闲时检查有效性, 默认false
       isTestWhileIdle: false
+      # 运行一次空闲连接回收器的间隔
       timeBetweenEvictionRunsMillis: 30000
+      # 池中的连接空闲后被回收的间隔，这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义
       minEvictableIdleTimeMillis: 1800000
-    cluster:
-#      nodes: ${REDIS_M_NODES:10.58.89.189:6379},${REDIS_S_NODES:10.58.89.189:6379}
-      master:
-        host: ${REDIS_M_NODES:10.58.89.189:6379}
-        password: ${REDIS_M_PASSWORD:}
-        timeout: 2000
-      slave:
-        host: ${REDIS_S_NODES:10.58.89.189:6379}
-        password: ${REDIS_S_PASSWORD:}
-        timeout: 2000
+#    标准主从配置
+#    cluster:
+#      #nodes: ${REDIS_M_NODES:10.58.89.189:6379},${REDIS_S_NODES:10.58.89.189:6379}
+#      master:
+#        host: ${REDIS_M_NODES:10.58.89.189:6379}
+#        password: ${REDIS_M_PASSWORD:}
+#        timeout: 2000
+#      slave:
+#        host: ${REDIS_S_NODES:10.58.89.189:6379}
+#        password: ${REDIS_S_PASSWORD:}
+#        timeout: 2000
 #    # redis哨兵主从设置
-#    sentinel:
-#      # master服务器的名字
-#      master: master1
-#      # redis-sentinel的配置地址和端口，多个逗号分割
-#      nodes: ${REDIS_S_NODES:10.58.89.189:6379}
+    sentinel:
+      # master服务器的名字
+      master: master1
+      # redis-sentinel的配置地址和端口，多个逗号分割，格式：
+      # redis-sentinel://[password@]host[:port][,host2[:port2]][/databaseNumber]#sentinelMasterId
+      # 10.124.132.130:6379#master1,10.124.132.156:6380
+      nodes: ${REDIS_NODES:10.58.89.189:6379}

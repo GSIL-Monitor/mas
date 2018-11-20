@@ -54,28 +54,36 @@ public class RedisJsonDao implements ICacheTemplate {
 
     private StatefulRedisClusterConnection getMasterClient() {
         StatefulRedisClusterConnection connection = null;
-        Object bean = applicationContext.getBean("ledisMasterClusterConnection");
-        if (bean instanceof StatefulRedisClusterConnection) {
-            connection = (StatefulRedisClusterConnection) bean;
-            try {
-                connection.isOpen();
-            } catch (Exception e) {
-                connection = null;
+        try {
+            Object bean = applicationContext.getBean("ledisMasterClusterConnection");
+            if (bean instanceof StatefulRedisClusterConnection) {
+                connection = (StatefulRedisClusterConnection) bean;
+                try {
+                    connection.isOpen();
+                } catch (Exception e) {
+                    connection = null;
+                }
             }
+        } catch (Exception e) {
+
         }
         return connection;
     }
 
     private StatefulRedisClusterConnection getSlaveClient() {
         StatefulRedisClusterConnection connection = null;
-        Object bean = applicationContext.getBean("ledisSlaveClusterConnection");
-        if (bean instanceof StatefulRedisClusterConnection) {
-            connection = (StatefulRedisClusterConnection) bean;
-            try {
-                connection.isOpen();
-            } catch (Exception e) {
-                connection = null;
+        try {
+            Object bean = applicationContext.getBean("ledisSlaveClusterConnection");
+            if (bean instanceof StatefulRedisClusterConnection) {
+                connection = (StatefulRedisClusterConnection) bean;
+                try {
+                    connection.isOpen();
+                } catch (Exception e) {
+                    connection = null;
+                }
             }
+        } catch (Exception e) {
+
         }
         return connection;
     }

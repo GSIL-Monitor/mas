@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: letv-mas-caller-tvproxy-vip
+  cloud:
+    iptv:
+      doc:
+        enabled: true

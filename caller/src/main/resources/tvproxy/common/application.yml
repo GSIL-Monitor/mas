@@ -11,7 +11,8 @@ spring:
   application:
     #name: letv-mas-caller-tvproxy
     index: ${SERVER_IP:127.0.0.1}:${SERVER_PORT:5555}
-  #profiles:
+  profiles:
+    include: differ
     #include: app,redis,db,hystrix,stream,manager,omp,trace,thrift
   zipkin:
       enabled: true

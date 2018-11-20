@@ -4,6 +4,7 @@ import com.lambdaworks.redis.ReadFrom;
 import com.lambdaworks.redis.RedisURI;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
+import com.letv.mas.router.iptv.tvproxy.plugin.redis.RedisProperties;
 import lombok.Data;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
@@ -18,6 +19,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisNode;
+import org.springframework.data.redis.connection.RedisSentinelConfiguration;
 import org.springframework.data.redis.connection.lettuce.DefaultLettucePool;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePool;
@@ -42,78 +45,90 @@ public class RedisConfig {
     @Autowired
     RedisProperties redisProperties;
 
-    @Data
-    @Primary
-    @Configuration
-    @ConfigurationProperties(prefix = "spring.redis")
-    public static class RedisProperties {
-        private Integer database;
-        private String host;
-        private String password;
-        private Long timeout;
-        private Pool pool;
-        private Cluster cluster;
-
-        @Data
-        public static class Pool {
-            private Integer maxIdle;
-            private Integer minIdle;
-            private Integer maxActive;
-            private Integer maxWait;
-            // 连接耗尽时是否阻塞, false报异常,true阻塞直到超时, 默认true
-            private boolean isBlockWhenExhausted = true;
-            // 在borrow一个实例时，是否提前进行alidate操作；如果为true，则得到的实例均是可用的，默认false
-            private boolean isTestOnBorrow = false;
-            // 调用returnObject方法时，是否进行有效检查，默认false
-            private boolean isTestOnReturn = false;
-            // 在空闲时检查有效性, 默认false
-            private boolean isTestWhileIdle = false;
-            // 运行一次空闲连接回收器的间隔；
-            private Long timeBetweenEvictionRunsMillis;
-            // 池中的连接空闲后被回收的间隔，这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；
-            private Long minEvictableIdleTimeMillis;
-        }
-
-        @Data
-        public static class Cluster {
-            private Nodes master;
-            private Nodes slave;
-
-            @Data
-            public static class Nodes {
-                private String host;
-                private String password;
-                private Long timeout;
-            }
-        }
-    }
-
     @Bean
     public GenericObjectPoolConfig getRedisConfig() {
         GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
-        genericObjectPoolConfig.setMaxIdle(redisProperties.getPool().maxIdle);
-        genericObjectPoolConfig.setMaxTotal(redisProperties.getPool().maxActive);
-        genericObjectPoolConfig.setMinIdle(redisProperties.getPool().minIdle);
-        genericObjectPoolConfig.setBlockWhenExhausted(redisProperties.getPool().isBlockWhenExhausted);
-        genericObjectPoolConfig.setMaxWaitMillis(redisProperties.getPool().maxWait);
-        genericObjectPoolConfig.setTestOnBorrow(redisProperties.getPool().isTestOnBorrow);
-        genericObjectPoolConfig.setTestOnReturn(redisProperties.getPool().isTestOnReturn);
-        genericObjectPoolConfig.setTestWhileIdle(redisProperties.getPool().isTestWhileIdle);
-        genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(redisProperties.getPool().timeBetweenEvictionRunsMillis);
-        genericObjectPoolConfig.setMinEvictableIdleTimeMillis(redisProperties.getPool().minEvictableIdleTimeMillis);
+        genericObjectPoolConfig.setMaxIdle(redisProperties.getPool().getMaxIdle());
+        genericObjectPoolConfig.setMaxTotal(redisProperties.getPool().getMaxActive());
+        genericObjectPoolConfig.setMinIdle(redisProperties.getPool().getMinIdle());
+        genericObjectPoolConfig.setBlockWhenExhausted(redisProperties.getPool().isBlockWhenExhausted());
+        genericObjectPoolConfig.setMaxWaitMillis(redisProperties.getPool().getMaxWait());
+        genericObjectPoolConfig.setTestOnBorrow(redisProperties.getPool().isTestOnBorrow());
+        genericObjectPoolConfig.setTestOnReturn(redisProperties.getPool().isTestOnReturn());
+        genericObjectPoolConfig.setTestWhileIdle(redisProperties.getPool().isTestWhileIdle());
+        genericObjectPoolConfig.setTimeBetweenEvictionRunsMillis(redisProperties.getPool().getTimeBetweenEvictionRunsMillis());
+        genericObjectPoolConfig.setMinEvictableIdleTimeMillis(redisProperties.getPool().getMinEvictableIdleTimeMillis());
         return genericObjectPoolConfig;
     }
 
     @Bean
+    @Primary
     public DefaultLettucePool getDefaultLettucePool(GenericObjectPoolConfig poolConfig) {
-        String[] node = redisProperties.getHost().split(":");
-        DefaultLettucePool defaultLettucePool = new DefaultLettucePool(node[0], Integer.parseInt(node[1]), poolConfig);
-        defaultLettucePool.setPassword(redisProperties.getPassword());
-        defaultLettucePool.afterPropertiesSet();
+        String[] node = null;
+        DefaultLettucePool defaultLettucePool = null;
+        if (null == redisProperties.getSentinel()) {
+            node = redisProperties.getHost().split(":");
+            defaultLettucePool = new DefaultLettucePool(node[0], Integer.parseInt(node[1]), poolConfig);
+            defaultLettucePool.setPassword(redisProperties.getPassword());
+            defaultLettucePool.afterPropertiesSet();
+        } else {
+            RedisSentinelConfiguration redisSentinelConfiguration = null;
+            List<RedisNode> redisNodes = new ArrayList<>();
+            if (StringUtils.isNotBlank(redisProperties.getSentinel().getNodes())) {
+                redisSentinelConfiguration = new RedisSentinelConfiguration();
+                redisSentinelConfiguration.master(redisProperties.getSentinel().getMaster());
+                node = redisProperties.getSentinel().getNodes().split(",");
+                redisNodes = new ArrayList<>();
+                RedisNode.RedisNodeBuilder redisNodeBuilder = null;
+                String tmpStr = null;
+                String[] tmpArr = null;
+                int index = 0;
+                for (String hostPort : node) {
+                    tmpStr = null;
+                    if (hostPort.contains("#")) { // master
+                        tmpStr = hostPort.substring(hostPort.indexOf("#") + 1);
+                        hostPort = hostPort.substring(0, hostPort.indexOf("#"));
+                    }
+                    tmpArr = hostPort.split(":");
+                    redisNodeBuilder = new RedisNode.RedisNodeBuilder();
+                    redisNodeBuilder.listeningAt(tmpArr[0], Integer.parseInt(tmpArr[1]));
+                    if (StringUtils.isNotBlank(tmpStr)) { // master
+                        redisNodeBuilder.withName(tmpStr);
+                        redisNodeBuilder.withId(String.valueOf(index));
+                        redisNodeBuilder.promotedAs(RedisNode.NodeType.MASTER);
+                        redisNodes.add(redisNodeBuilder.build());
+                    } else {
+                        redisNodeBuilder.withId(String.valueOf(index));
+                        redisNodeBuilder.promotedAs(RedisNode.NodeType.SLAVE);
+                        redisNodes.add(redisNodeBuilder.build());
+                    }
+                    index++;
+                }
+            } else {
+                redisSentinelConfiguration = new RedisSentinelConfiguration();
+                redisSentinelConfiguration.master("master");
+                node = redisProperties.getHost().split(":");
+                RedisNode redisNode = new RedisNode(node[0], Integer.parseInt(node[1]));
+                redisNode.setName("master");
+                redisNodes.add(redisNode);
+            }
+            redisSentinelConfiguration.setSentinels(redisNodes);
+            defaultLettucePool = new DefaultLettucePool(redisSentinelConfiguration);
+            node = redisProperties.getHost().split(":");
+            defaultLettucePool.setHostName(node[0]);
+            defaultLettucePool.setPort(Integer.parseInt(node[1]));
+            defaultLettucePool.setPassword(redisProperties.getPassword());
+            defaultLettucePool.setDatabase(redisProperties.getDatabase());
+            defaultLettucePool.setTimeout(redisProperties.getTimeout());
+            defaultLettucePool.setPoolConfig(poolConfig);
+            defaultLettucePool.afterPropertiesSet();
+        }
+
         return defaultLettucePool;
     }
 
     @Bean
+    @Primary
     public LettuceConnectionFactory lettuceConnectionFactory(LettucePool pool) {
         LettuceConnectionFactory factory = new LettuceConnectionFactory(pool);
         factory.setValidateConnection(true);
@@ -143,26 +158,42 @@ public class RedisConfig {
         return new RedisCacheManager(redisTemplate);
     }
 
-    @RefreshScope
-    @Bean(name = "ledisMasterClusterConnection")
-    @ConditionalOnBean(RedisConfig.RedisProperties.class)
+    /**
+     * 标准集群主从分离方式－主
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+//    @RefreshScope
+//    @Bean(name = "ledisMasterClusterConnection")
+    @ConditionalOnBean(RedisProperties.class)
     public StatefulRedisClusterConnection ledisMasterClusterConnection() {
+        if (null != redisProperties.getCluster()) {
+            return null;
+        }
         return this.getConnection(redisProperties.getCluster().getMaster(), ReadFrom.MASTER);
     }
 
-    @RefreshScope
-    @Bean(name = "ledisSlaveClusterConnection")
-    @ConditionalOnBean(RedisConfig.RedisProperties.class)
+    /**
+     * 标准集群主从分离方式－从
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+//    @RefreshScope
+//    @Bean(name = "ledisSlaveClusterConnection")
+    @ConditionalOnBean(RedisProperties.class)
     public StatefulRedisClusterConnection ledisSlaveClusterConnection() {
+        if (null != redisProperties.getCluster()) {
+            return null;
+        }
         return this.getConnection(redisProperties.getCluster().getSlave(), ReadFrom.SLAVE);
     }
 
     private StatefulRedisClusterConnection getConnection(RedisProperties.Cluster.Nodes nodes, ReadFrom readFrom) {
         StatefulRedisClusterConnection<String, String> connection = null;
         if (null != nodes) {
-            String strNodes = nodes.host;
-            String strPwd = nodes.password;
-            Long timeout = nodes.timeout;
+            String strNodes = nodes.getHost();
+            String strPwd = nodes.getPassword();
+            Long timeout = nodes.getTimeout();
             String[] aryNodes = strNodes.split(",");
             List<RedisURI> listRedisURIs = new ArrayList<RedisURI>();
             String[] nodeInfo = null;
@@ -175,14 +206,14 @@ public class RedisConfig {
                 nodeInfo = node.split(":");
                 // "redis://password@host:port/timeout"
                 redisURI = RedisURI.Builder.redis(nodeInfo[0], Integer.parseInt(nodeInfo[1]))
-                        .withPassword(strPwd).withDatabase(1).withTimeout(timeout, TimeUnit.MILLISECONDS).build();
+                        .withPassword(strPwd).withDatabase(1)/*.withTimeout(timeout, TimeUnit.MILLISECONDS)*/.build();
                 listRedisURIs.add(redisURI);
             }
             RedisClusterClient clusterClient = RedisClusterClient.create(listRedisURIs);
             try {
                 connection = clusterClient.connect();
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
             if (null != connection) {
                 connection.setReadFrom(readFrom);
