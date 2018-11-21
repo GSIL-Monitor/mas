@@ -1,6 +1,6 @@
 package com.letv.mas.caller.iptv.tvproxy.common.model.dto;
 
-import com.letv.mas.caller.iptv.tvproxy.common.plugin.CopyFieldAnnotation;
+import com.letv.mas.caller.iptv.tvproxy.common.annotation.CopyFieldAnnotation;
 
 public class LetvUserDto {
 

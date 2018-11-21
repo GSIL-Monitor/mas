@@ -292,6 +292,13 @@ public class UserTpDao extends BaseTpDao {
         if (appId != null) {
             // 因上游对之前未传appid的case默认按0处理，兼容旧数据需多传一组
             subUrl.append("&appid=").append("0,").append(appId.getCode());
+            if (null != roleid && roleid.longValue() != 0) { // 儿童插件和独立版共存时播放记录能相互漫游！
+                if (appId == APPID.LETV_TV_CIBN) {
+                    subUrl.append(",").append(APPID.LETV_TV_CHILD);
+                } else if (appId == APPID.LETV_TV_CHILD) {
+                    subUrl.append(",").append(APPID.LETV_TV_CIBN);
+                }
+            }
         }
         if (from != null) {
             subUrl.append("&from=").append(from);

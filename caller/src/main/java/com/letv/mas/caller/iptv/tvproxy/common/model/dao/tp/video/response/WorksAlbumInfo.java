@@ -1,6 +1,6 @@
 package com.letv.mas.caller.iptv.tvproxy.common.model.dao.tp.video.response;
 
-import com.letv.mas.caller.iptv.tvproxy.common.plugin.CopyFieldAnnotation;
+import com.letv.mas.caller.iptv.tvproxy.common.annotation.CopyFieldAnnotation;
 
 /**
  * Created by leeco on 18/9/12.

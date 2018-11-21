@@ -342,7 +342,7 @@
         <profile>
             <id>pre</id>
             <properties>
-                <profiles.active>pre</profiles.active>
+                <profiles.active>prod</profiles.active>
             </properties>
         </profile>
         <!--生产环境-->

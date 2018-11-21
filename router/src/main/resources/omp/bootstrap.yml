@@ -1,0 +1,23 @@
+# Note: kafka&zk&eureka.. 相关配置放到了GIT仓库application-{profile}.yml中
+spring:
+  application:
+    name: letv-mas-client
+    index: ${CLIENT_SERVER_IP:127.0.0.1}:${server.port}
+  profiles:
+    active: ${CLIENT_PROFILE:default}
+    #include: busdev,streamdev
+security:
+  user:
+    name: config
+    password: config2018
+  basic:
+    enabled: false
+
+logging:
+  level:
+    root: info
+
+# 自定义系统日志输出
+logout:
+  path: /letv/logs/mas/omp
+

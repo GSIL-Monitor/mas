@@ -8,19 +8,14 @@ import java.lang.annotation.Target;
 /**
  * 所有需要缓存的方法，需要加上此标记
  * 例如：
- * @LocalCacheAnnotation(name="doSomething", 
- *                                           expireInMillis=LocalCacheInterface.ONE_MINUTE
- *                                           )
- *                                           String doSomething() {
- *                                           Object object =
- *                                           someService.getResult();
- *                                           return object;
- *                                           }
- *                                           标记有两个可选入参：
- *                                           - name是缓存名称，默认是被标记的方法名；
- *                                           expireInMillis是缓存过期时间
- *                                           - 默认是LocalCacheInterface.
- *                                           DEFAULT_EXPIRE_TIME
+ * @LocalCacheAnnotation(name="doSomething", expireInMillis=LocalCacheInterface.ONE_MINUTE)
+ * String doSomething() {
+ *     Object object = someService.getResult();
+ *     return object;
+ * }
+ * 标记有两个可选入参：
+ * - name是缓存名称，默认是被标记的方法名； expireInMillis是缓存过期时间
+ * - 默认是LocalCacheInterface.DEFAULT_EXPIRE_TIME
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD })

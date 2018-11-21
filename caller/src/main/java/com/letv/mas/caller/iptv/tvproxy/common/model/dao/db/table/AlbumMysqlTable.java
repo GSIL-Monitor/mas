@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.letv.mas.caller.iptv.tvproxy.common.constant.CommonConstants;
-import com.letv.mas.caller.iptv.tvproxy.common.plugin.CopyFieldAnnotation;
+import com.letv.mas.caller.iptv.tvproxy.common.annotation.CopyFieldAnnotation;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

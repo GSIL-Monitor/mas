@@ -127,9 +127,9 @@ public class CacheTemplate implements ICacheTemplate {
 
             long end = System.currentTimeMillis();
             String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", value, logInfo);
-            }
+            }*/
 
             if (end - begin >= 500) {
                 logger.info(logInfo);
@@ -137,9 +137,9 @@ public class CacheTemplate implements ICacheTemplate {
         } catch (Exception e) {
             String logInfo = logPrefix + "|result=0|timeCost="
                     + (System.currentTimeMillis() - begin) + "|errMsg=set error.";
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", value, logInfo);
-            }
+            }*/
             logger.error(logInfo, e);
             return CacheConstants.FAIL;
         }
@@ -176,18 +176,18 @@ public class CacheTemplate implements ICacheTemplate {
 
             long end = System.currentTimeMillis();
             String logInfo = logPrefix + "|result=1|timeCost=" + (begin - begin);
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", value, logInfo);
-            }
+            }*/
             if (end - begin >= 500) {
                 logger.info(logInfo);
             }
         } catch (Exception e) {
             String logInfo = logPrefix + "|result=0|timeCost="
                     + (System.currentTimeMillis() - begin) + "|errMsg=set error.";
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", value, logInfo);
-            }
+            }*/
             logger.error(logInfo, e);
             return CacheConstants.FAIL;
         }
@@ -223,18 +223,18 @@ public class CacheTemplate implements ICacheTemplate {
             }
             long end = System.currentTimeMillis();
             String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", valueMap, logInfo);
-            }
+            }*/
             if (end - begin >= 500) {
                 logger.info(logInfo);
             }
         } catch (Exception e) {
             String logInfo = logPrefix + "|result=0|timeCost="
                     + (System.currentTimeMillis() - begin) + "|errMsg=set error.";
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", null, logInfo);
-            }
+            }*/
             logger.error(logInfo, e);
             return CacheConstants.FAIL;
         }
@@ -271,18 +271,18 @@ public class CacheTemplate implements ICacheTemplate {
 
             long end = System.currentTimeMillis();
             String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", valueMap, logInfo);
-            }
+            }*/
             if (end - begin >= 500) {
                 logger.info(logInfo);
             }
         } catch (Exception e) {
             String logInfo = logPrefix + "|result=0|timeCost="
                     + (System.currentTimeMillis() - begin) + "|errMsg=set error.";
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", null, logInfo);
-            }
+            }*/
             logger.error(logInfo, e);
             return CacheConstants.FAIL;
         }
@@ -301,9 +301,9 @@ public class CacheTemplate implements ICacheTemplate {
 
         long end = System.currentTimeMillis();
         String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-        if (null != SessionCache.getSession()) {
+        /*if (null != SessionCache.getSession()) {
             SessionCache.getSession().setResponse("cache://", result, logInfo);
-        }
+        }*/
         if (end - begin >= 500) {
             logger.info(logInfo);
         }
@@ -343,9 +343,9 @@ public class CacheTemplate implements ICacheTemplate {
 
         long end = System.currentTimeMillis();
         String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-        if (null != SessionCache.getSession()) {
+        /*if (null != SessionCache.getSession()) {
             SessionCache.getSession().setResponse("cache://", result, logInfo);
-        }
+        }*/
         if (end - begin >= 500) {
             logger.info(logInfo);
         }
@@ -364,9 +364,9 @@ public class CacheTemplate implements ICacheTemplate {
 
         long end = System.currentTimeMillis();
         String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-        if (null != SessionCache.getSession()) {
+        /*if (null != SessionCache.getSession()) {
             SessionCache.getSession().setResponse("cache://", result, logInfo);
-        }
+        }*/
         if (end - begin >= 500) {
             logger.info("CacheDao|mget|key=" + StringUtils.join(keys, ",") + "|timeCost=" + (end - begin));
         }
@@ -390,9 +390,9 @@ public class CacheTemplate implements ICacheTemplate {
 
         long end = System.currentTimeMillis();
         String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-        if (null != SessionCache.getSession()) {
+        /*if (null != SessionCache.getSession()) {
             SessionCache.getSession().setResponse("cache://", result, logInfo);
-        }
+        }*/
         if (end - begin >= 500) {
             logger.info("CacheDao|mget|key=" + StringUtils.join(keys, ",") + "|timeCost=" + (end - begin));
         }
@@ -430,18 +430,18 @@ public class CacheTemplate implements ICacheTemplate {
 
             long end = System.currentTimeMillis();
             String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", null, logInfo);
-            }
+            }*/
             if (end - begin >= 500) {
                 logger.info(logInfo);
             }
         } catch (Exception e) {
             String logInfo = logPrefix + "|result=0|timeCost="
                     + (System.currentTimeMillis() - begin) + "|errMsg=set error.";
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", null, logInfo);
-            }
+            }*/
             logger.error(logInfo, e);
             return CacheConstants.FAIL;
         }
@@ -459,9 +459,9 @@ public class CacheTemplate implements ICacheTemplate {
 
         long end = System.currentTimeMillis();
         String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-        if (null != SessionCache.getSession()) {
+        /*if (null != SessionCache.getSession()) {
             SessionCache.getSession().setResponse("cache://", "{\"" + member + ":\""  + result + "}", logInfo);
-        }
+        }*/
         if (end - begin >= 500) {
             logger.info(logInfo);
         }
@@ -496,18 +496,18 @@ public class CacheTemplate implements ICacheTemplate {
 
             long end = System.currentTimeMillis();
             String logInfo = logPrefix + "|result=1|timeCost=" + (end - begin);
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", member, logInfo);
-            }
+            }*/
             if (end - begin >= 500) {
                 logger.info(logInfo);
             }
         } catch (Exception e) {
             String logInfo = logPrefix + "|result=0|timeCost="
                     + (System.currentTimeMillis() - begin) + "|errMsg=set error.";
-            if (null != SessionCache.getSession()) {
+            /*if (null != SessionCache.getSession()) {
                 SessionCache.getSession().setResponse("cache://", null, logInfo);
-            }
+            }*/
             logger.error(logInfo, e);
             return CacheConstants.FAIL;
         }

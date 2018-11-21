@@ -985,14 +985,17 @@ public class VideoUtil {
     }
 
     public static void rebuildVideoDto(AlbumMysqlTable albumMysqlTable, VideoMysqlTable videoMysqlTable,
-            CommonParam commonParam, VideoDto videoPlay, Map<String, SubscribeInfoV2> subscribeInfoV2Map) {
+                                       CommonParam commonParam, VideoDto videoPlay, Map<String, SubscribeInfoV2> subscribeInfoV2Map) {
         // 童话侠项目: 特殊处理广告会员标识
         String pay_platform = null;
+        Integer category = null;
         if (null != albumMysqlTable) {
             pay_platform = albumMysqlTable.getPay_platform();
+            category = albumMysqlTable.getCategory();
         } else {
             if (null != videoMysqlTable) {
                 pay_platform = videoMysqlTable.getPay_platform();
+                category = videoMysqlTable.getCategory();
             }
         }
 
@@ -1023,12 +1026,12 @@ public class VideoUtil {
         // ========================增设家庭会员影片类型(E)============================= //
 
         if (/*
-             * (StringUtil.isNotBlank(albumMysqlTable.getSource_id()) &&
-             * albumMysqlTable.getSource_id().contains("200037")) ||
-             * (StringUtil.isNotBlank(videoMysqlTable.getSource_id()) &&
-             * videoMysqlTable.getSource_id().contains("200037"))
-             */
-        ChargeInfo.isHomeVip(MmsDataUtil.getChargeTypeFromPlatform(pay_platform, commonParam.getP_devType()))) {
+         * (StringUtil.isNotBlank(albumMysqlTable.getSource_id()) &&
+         * albumMysqlTable.getSource_id().contains("200037")) ||
+         * (StringUtil.isNotBlank(videoMysqlTable.getSource_id()) &&
+         * videoMysqlTable.getSource_id().contains("200037"))
+         */
+                ChargeInfo.isHomeVip(MmsDataUtil.getChargeTypeFromPlatform(pay_platform, commonParam.getP_devType()))) {
             if (videoPlay.getPlayType() == ChargeTypeConstants.chargePolicy.FREE) { // 免费
                 boolean vipIsCibn = false;
                 boolean vipIsHome = false;
@@ -1078,6 +1081,7 @@ public class VideoUtil {
         }
 
         // 非会员可用所有码率(超清/高清/流畅)观看童话侠内容；
+        boolean doneForFree = false;
         if (null != videoPlay.getVip() && videoPlay.getVip().intValue() == 0) {
             String sourceid = null;
             if (null != albumMysqlTable && StringUtil.isNotBlank(albumMysqlTable.getSource_id())) {
@@ -1092,7 +1096,27 @@ public class VideoUtil {
                 if (null != sourceid && null != ids && ids.contains(sourceid)
                         && videoPlay.getPlayType() == ChargeTypeConstants.chargePolicy.CHARGE_BY_STREAM) {
                     videoPlay.setPlayType(ChargeTypeConstants.chargePolicy.FREE);
+                    doneForFree = true;
                 }
+            }
+        }
+
+        // 广告频道（36）免费播放
+        if (/*LocaleConstant.Wcode.CN.equalsIgnoreCase(commonParam.getSalesArea())
+                &&*/ !doneForFree && (TerminalCommonConstant.TERMINAL_APPLICATION_LETV.equalsIgnoreCase(commonParam
+                .getTerminalApplication()) || TerminalCommonConstant.TERMINAL_APPLICATION_MEDIA_CIBN
+                .equalsIgnoreCase(commonParam.getTerminalApplication()))) {
+            if (null != category && category.intValue() == VideoConstants.Category.AD
+                    && videoPlay.getPlayType() == ChargeTypeConstants.chargePolicy.CHARGE_BY_STREAM) {
+                videoPlay.setPlayType(ChargeTypeConstants.chargePolicy.FREE);
+                doneForFree = true;
+            }
+        }
+
+        // 重置码率清单，解决切码率付费提示问题！
+        if (doneForFree) {
+            for(Stream stream: videoPlay.getStreams()) {
+                stream.setIfCharge(0);
             }
         }
     }

@@ -2015,7 +2015,7 @@ public class VipV2Service extends BaseService {
         if (!posids.contains(ActivityTpConstant.ACTIVITY_CLIENT_POSITION_VIP_REMIND)) {
             return posids;
         }
-        String title = showVipRemind(vet);
+        String title = showVipRemindV2(vet);
         if (title == null) {
             return posids.replace(ActivityTpConstant.ACTIVITY_CLIENT_POSITION_VIP_REMIND, "");
         }
@@ -2041,7 +2041,7 @@ public class VipV2Service extends BaseService {
             }
         }
         if (vip != null) {
-            String title = showVipRemind(vet);
+            String title = showVipRemindV2(vet);
             if (title == null) {
                 promotionDtos.remove(vip);
                 return;
@@ -2069,7 +2069,58 @@ public class VipV2Service extends BaseService {
             detween = (int) ((now - vet) / (1000 * 60 * 60 * 24));
         }
         detween = Math.abs(detween);
-        if (detween != 0 && detween != 7 && detween != 15 && detween != 30) {
+        if (detween != 0 && detween != 1 && detween != 7 && detween != 15 && detween != 30) {
+            return title;
+        }
+        if (detween == 0) {
+            if (isVip == 0) {
+                int temp = (int)(now - vet) % (1000 * 60 * 60 * 24);
+                title = "您的会员已在今天过期！";
+            } else if (isVip == 1) {
+                title = "您的会员将在今天到期！";
+            }
+        }
+        if (detween == 1) {
+            if (isVip == 0) {
+                title = "您的会员已在昨天过期！";
+            } else if (isVip == 1) {
+                title = "您的会员将在明天到期！";
+            }
+        }
+        if (detween == 7) {
+            if (isVip == 0) {
+                title = "您的会员已过期"+detween+"天!";
+            } else if (isVip == 1) {
+                title = "您的会员仅有"+detween+"天到期!";
+            }
+        }
+        if (detween == 15 || detween == 30) {
+            if (isVip == 0) {
+                title = "您的会员已过期"+detween+"天～";
+            } else if (isVip == 1) {
+                title = "您的会员还有"+detween+"天到期～";
+            }
+        }
+        return title;
+    }
+
+    private String showVipRemindV2(Long vet) {
+        String title = null;
+        if (vet == null) {
+            return title;
+        }
+        long now = System.currentTimeMillis();
+
+        int isVip = 0;
+        int detween = 0;
+        if (vet >= now) {
+            isVip = 1;
+            detween = TimeUtil.daysBetween(now,vet);
+        } else {
+            detween = TimeUtil.daysBetween(vet,now);
+        }
+        //detween = Math.abs(detween);
+        if (detween != 0 && detween != 1 && detween != 7 && detween != 15 && detween != 30) {
             return title;
         }
         if (detween == 0) {
@@ -2086,11 +2137,18 @@ public class VipV2Service extends BaseService {
                 title = "您的会员将在明天到期！";
             }
         }
-        if (detween == 7 || detween == 15 || detween == 30) {
+        if (detween == 7) {
             if (isVip == 0) {
-                title = "您的会员已过期"+detween+"天! ";
+                title = "您的会员已过期"+detween+"天!";
             } else if (isVip == 1) {
-                title = "您的会员还有"+detween+"天到期!";
+                title = "您的会员仅有"+detween+"天到期!";
+            }
+        }
+        if (detween == 15 || detween == 30) {
+            if (isVip == 0) {
+                title = "您的会员已过期"+detween+"天～";
+            } else if (isVip == 1) {
+                title = "您的会员还有"+detween+"天到期～";
             }
         }
         return title;

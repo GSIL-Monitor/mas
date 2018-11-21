@@ -1,6 +1,6 @@
 package com.letv.mas.caller.iptv.tvproxy.common.model.dao.tp.video.response;
 
-import com.letv.mas.caller.iptv.tvproxy.common.plugin.CopyFieldAnnotation;
+import com.letv.mas.caller.iptv.tvproxy.common.annotation.CopyFieldAnnotation;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;

@@ -34,10 +34,10 @@ public class RedisJsonDao implements ICacheTemplate {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisJsonDao.class);
     private static final String LOG_TAG = "redis";
 
-    //    @Autowired
+//    @Autowired
     private ApplicationContext applicationContext;
 
-    //    @SuppressWarnings("rawtypes")
+//    @SuppressWarnings("rawtypes")
 //    @Autowired
     private RedisTemplate<String, String> redisTemplate;
 

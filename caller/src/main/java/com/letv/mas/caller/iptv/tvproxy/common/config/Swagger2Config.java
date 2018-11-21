@@ -47,24 +47,23 @@ public class Swagger2Config {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy"))
-                .paths(PathSelectors.any())
                 .build()
                 .apiInfo(apiInfo())
-                .pathMapping("/")
-                .directModelSubstitute(LocalDate.class, String.class)
+                .pathMapping("/iptv/api/new")
+                /*.directModelSubstitute(LocalDate.class, String.class)
                 .genericModelSubstitutes(ResponseEntity.class)
                 .alternateTypeRules(
                         newRule(typeResolver.resolve(DeferredResult.class,
                                 typeResolver.resolve(ResponseEntity.class, WildcardType.class)),
-                                typeResolver.resolve(WildcardType.class)))
+                                typeResolver.resolve(WildcardType.class)))*/
                 .useDefaultResponseMessages(false)
                 .globalResponseMessage(RequestMethod.GET,
                         newArrayList(new ResponseMessageBuilder()
                                 .code(500)
                                 .message("内部服务器错误!")
                                 .responseModel(new ModelRef("Error"))
-                                .build()))
-                .enableUrlTemplating(true);
+                                .build()));
+                /*.enableUrlTemplating(true);*/
 //                .tags(new Tag("大屏微服务代理层", "接口文档"));
     }
 
@@ -95,6 +94,102 @@ public class Swagger2Config {
                 .supportedSubmitMethods(UiConfiguration.Constants.DEFAULT_SUBMIT_METHODS)
                 .validatorUrl(null)
                 .build();
+    }
+
+    @Bean
+    public Docket channel_docket() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("channel")
+                .apiInfo(
+                        new ApiInfoBuilder().title("频道相关接口").contact(new Contact("邓利维", "", "dengliwei@le.com"))
+                                .version("V2.0.0").build()).useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.channel")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket video_docket() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("video")
+                .apiInfo(
+                        new ApiInfoBuilder().title("播放相关接口").contact(new Contact("邓利维", "", "dengliwei@le.com"))
+                                .version("V2.0.0").build()).useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.video")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket desk_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("desk")
+                .apiInfo(new ApiInfoBuilder().title("桌面相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.desk")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket user_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("user")
+                .apiInfo(new ApiInfoBuilder().title("用户相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.user")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket terminal_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("terminal")
+                .apiInfo(new ApiInfoBuilder().title("终端相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.terminal")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket recommendation_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("recommendation")
+                .apiInfo(new ApiInfoBuilder().title("推荐相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.recommendation")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket search_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("search")
+                .apiInfo(new ApiInfoBuilder().title("搜索相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.search")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket vip_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("vip")
+                .apiInfo(new ApiInfoBuilder().title("会员相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.vip")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket cashier_docket() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .groupName("cashier")
+                .apiInfo(
+                        new ApiInfoBuilder().title("收银台相关接口").contact(new Contact("马宁", "", "maning5@le.com"))
+                                .version("V2.0.0").build()).useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.cashier")).build()
+                .pathMapping("/iptv/api/new/");
+    }
+
+    @Bean
+    public Docket live_docket() {
+        return new Docket(DocumentationType.SWAGGER_2).groupName("live")
+                .apiInfo(new ApiInfoBuilder().title("直播相关接口").version("V2.0.0").build())
+                .useDefaultResponseMessages(false).select()
+                .apis(RequestHandlerSelectors.basePackage("com.letv.mas.caller.iptv.tvproxy.live")).build()
+                .pathMapping("/iptv/api/new/");
     }
 
 }

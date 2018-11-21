@@ -24,6 +24,7 @@
             utils.loadScript("js/bootstrap.min.js", function () {
                 utils.loadScript("js/common/jquery.cookie.js", function () {
                     utils.loadScript("js/common/jquery.base64.js", function () {
+                        utils.loadScript("js/common/GlobalUrl.js", function () {
                 // way1: 存在时序问题，若通过callback相对繁琐！
 //                utils.loadScript("js/plugins/morris/raphael-min.js");
 //                utils.loadScript("js/plugins/morris/morris.min.js");
@@ -96,7 +97,7 @@
 //                    async: true
 //                });
 
-            })})});
+            })})})});
         });
     });
 </script>

@@ -42,6 +42,7 @@
         <redis.version>2.1.0.RELEASE</redis.version>
         <jedis.version>2.9.0</jedis.version>
         <lettuce.version>5.1.2.RELEASE</lettuce.version>
+        <bucket4j.version>0.1.15</bucket4j.version>
     </properties>
 
     <dependencies>
@@ -250,6 +251,13 @@
             <groupId>biz.paluch.redis</groupId>
             <artifactId>lettuce</artifactId>
             <version>4.5.0.Final</version>
+        </dependency>
+
+        <!--https://github.com/MarcGiffing/bucket4j-spring-boot-starter-->
+        <dependency>
+            <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
+            <artifactId>bucket4j-spring-boot-starter</artifactId>
+            <version>${bucket4j.version}</version>
         </dependency>
     </dependencies>
 

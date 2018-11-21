@@ -59,8 +59,8 @@ public class HttpClientUtil extends RestTemplate {
      * 第三方服务状态集
      */
     private final static Map<String, TpServiceStatus> tpServerStatusMap = new HashMap<>();
-    // private static long INTERFACE_RESPONSE_TIME = 2000;// 第三方接口响应时间临界值 2s
-    private static long INTERFACE_RESPONSE_TIME = 500;
+    private static long INTERFACE_RESPONSE_TIME = 2000;// 第三方接口响应时间临界值 2s
+    //private static long INTERFACE_RESPONSE_TIME = 500;
 
     static {
         /* 临时处理，防止定时切服 at wangshengkai */
@@ -421,7 +421,7 @@ public class HttpClientUtil extends RestTemplate {
          * 初始化第三方服务状态对象
          */
         String domain = this.getUrlTemplate(url);
-        /*TpServiceStatus tpServerStatus = this.tpServerStatusMap.get(domain);
+        TpServiceStatus tpServerStatus = this.tpServerStatusMap.get(domain);
         if (tpServerStatus == null) {// 未初始化
             synchronized (this.tpServerStatusMap) {// 防止多个线程重复初始化
                 if (tpServerStatus == null) {
@@ -432,16 +432,16 @@ public class HttpClientUtil extends RestTemplate {
             }
         }
 
-        *//*
+        /*
          * 验证第三方服务是否可用
-         *//*
+         */
         if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
             if (null != SessionCache.getSession()) {
                 String logInfo = "|505|0|" + "0|0";
                 SessionCache.getSession().setResponse(this.getUrl(url, uriVariables), "", logInfo);
             }
             return null;
-        }*/
+        }
 
         /*
          * 第三方服务可用，执行请求
@@ -483,7 +483,7 @@ public class HttpClientUtil extends RestTemplate {
         /*
          * 验证第三方服务状态
          */
-        //this.checkTpServiceStatus(domain, tpServerStatus, wasteTime);
+        this.checkTpServiceStatus(domain, tpServerStatus, wasteTime);
 
         return response;
     }
@@ -551,13 +551,13 @@ public class HttpClientUtil extends RestTemplate {
         /*
          * 验证第三方服务是否可用
          */
-        /*if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
+        if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
             if (null != SessionCache.getSession()) {
                 String logInfo = "|505|0|" + "0|0";
                 SessionCache.getSession().setResponse(this.getUrl(url, uriVariables), "", logInfo);
             }
             return null;
-        }*/
+        }
 
         long stime = System.currentTimeMillis();
         ResponseEntity<T> response = null;
@@ -621,13 +621,13 @@ public class HttpClientUtil extends RestTemplate {
         /*
          * 验证第三方服务是否可用
          */
-        /*if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
+        if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
             if (null != SessionCache.getSession()) {
                 String logInfo = "|505|0|" + "0|0";
                 SessionCache.getSession().setResponse(url.toString(), "", logInfo);
             }
             return null;
-        }*/
+        }
 
         long stime = System.currentTimeMillis();
         ResponseEntity<T> response = null;
@@ -686,13 +686,13 @@ public class HttpClientUtil extends RestTemplate {
         /*
          * 验证第三方服务是否可用
          */
-        /*if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
+        if ((System.currentTimeMillis() - tpServerStatus.getCloseTime()) < INTERFACE_AUTO_NORMAL_TIME) {// 距离最近一次关闭不到设定的时间间隔，直接返回
             if (null != SessionCache.getSession()) {
                 String logInfo = "|505|0|" + "0|0";
                 SessionCache.getSession().setResponse(this.getUrl(url, uriVariables), "", logInfo);
             }
             return null;
-        }*/
+        }
 
         long stime = System.currentTimeMillis();
         ResponseEntity<T> response = null;
@@ -890,10 +890,11 @@ public class HttpClientUtil extends RestTemplate {
                 long avgTime = responseTime / cnt;
                 if ((avgTime) > INTERFACE_RESPONSE_TIME) {// 平均响应时间
                     // 解决并发量大下瞬时间熔断失效问题
-                    /*synchronized (tpServiceStatus) {
+                    synchronized (tpServiceStatus) {
                         tpServiceStatus.setCloseTime(System.currentTimeMillis());// 关闭（更新关闭时间）
-                    }*/
-                    this.apiSwitchMonitor.info("[" + domain + "]" + "average response time:["
+                    }
+                    this.apiSwitchMonitor.info("[" + domain + "]" + " close time:["
+                            + TimeUtil.timestamp2date(System.currentTimeMillis()) + "]" + "average response time:["
                             + avgTime + "]");
                 }
             }
