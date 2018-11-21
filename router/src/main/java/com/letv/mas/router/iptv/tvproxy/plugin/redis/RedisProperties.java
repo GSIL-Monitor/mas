@@ -43,6 +43,7 @@ public class RedisProperties {
 
     @Data
     public static class Cluster {
+        private String mode;
         private Nodes master;
         private Nodes slave;
 

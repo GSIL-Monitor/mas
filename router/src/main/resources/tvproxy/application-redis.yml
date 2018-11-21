@@ -33,22 +33,24 @@ spring:
       timeBetweenEvictionRunsMillis: 30000
       # 池中的连接空闲后被回收的间隔，这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义
       minEvictableIdleTimeMillis: 1800000
-#    标准主从配置
-#    cluster:
-#      #nodes: ${REDIS_M_NODES:10.58.89.189:6379},${REDIS_S_NODES:10.58.89.189:6379}
-#      master:
-#        host: ${REDIS_M_NODES:10.58.89.189:6379}
-#        password: ${REDIS_M_PASSWORD:}
-#        timeout: 2000
-#      slave:
-#        host: ${REDIS_S_NODES:10.58.89.189:6379}
-#        password: ${REDIS_S_PASSWORD:}
-#        timeout: 2000
-#    # redis哨兵主从设置
-    sentinel:
-      # master服务器的名字
-      master: master1
-      # redis-sentinel的配置地址和端口，多个逗号分割，格式：
-      # redis-sentinel://[password@]host[:port][,host2[:port2]][/databaseNumber]#sentinelMasterId
-      # 10.124.132.130:6379#master1,10.124.132.156:6380
-      nodes: ${REDIS_NODES:10.58.89.189:6379}
+#    主从配置（标准需redis开启集群模式）
+    cluster:
+      # normal-标准，seperate-读写分离
+      mode: ${REDIS_CLUSTER_MODE:seperate}
+      #nodes: ${REDIS_M_NODES:10.58.89.189:6379},${REDIS_S_NODES:10.58.89.189:6379}
+      master:
+        host: ${REDIS_M_NODES:10.58.89.189:6379}
+        password: ${REDIS_M_PASSWORD:}
+        timeout: 2000
+      slave:
+        host: ${REDIS_S_NODES:10.58.89.189:6379}
+        password: ${REDIS_S_PASSWORD:}
+        timeout: 2000
+#    # redis哨兵主从设置 （带连接池的方案未验证通过！)
+#    sentinel:
+#      # master服务器的名字
+#      master: master1
+#      # redis-sentinel的配置地址和端口，多个逗号分割，格式：
+#      # redis-sentinel://[password@]host[:port][,host2[:port2]][/databaseNumber]#sentinelMasterId
+#      # 10.124.132.130:6379#master1,10.124.132.156:6380
+#      nodes: ${REDIS_NODES:10.58.89.189:6379}

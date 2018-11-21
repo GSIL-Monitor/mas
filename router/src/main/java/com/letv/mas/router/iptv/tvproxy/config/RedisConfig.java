@@ -1,19 +1,21 @@
 package com.letv.mas.router.iptv.tvproxy.config;
 
 import com.lambdaworks.redis.ReadFrom;
+import com.lambdaworks.redis.RedisClient;
 import com.lambdaworks.redis.RedisURI;
+import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
+import com.lambdaworks.redis.support.ConnectionPoolSupport;
 import com.letv.mas.router.iptv.tvproxy.plugin.redis.RedisProperties;
-import lombok.Data;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -153,9 +155,46 @@ public class RedisConfig {
         return template;
     }
 
+    /**
+     * 本地data缓存
+     * @param redisTemplate
+     * @return
+     */
 //    @Bean
     public RedisCacheManager getRedisCacheManager(RedisTemplate<String, Object> redisTemplate) {
         return new RedisCacheManager(redisTemplate);
+    }
+
+    /**
+     * 非标准集群主从分离方式－主
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+//    @RefreshScope
+    @Bean(name = "ledisMasterPool")
+    @ConditionalOnBean(RedisProperties.class)
+    @ConditionalOnProperty(value = {"spring.redis.cluster.mode"}, havingValue = "seperate", matchIfMissing = false)
+    public GenericObjectPool ledisMasterPool() {
+        if (null == redisProperties.getCluster()) {
+            return null;
+        }
+        return this.getClusterPool(redisProperties.getCluster().getMaster());
+    }
+
+    /**
+     * 非标准集群主从分离方式－从
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+//    @RefreshScope
+    @Bean(name = "ledisSlavePool")
+    @ConditionalOnBean(RedisProperties.class)
+    @ConditionalOnProperty(value = {"spring.redis.cluster.mode"}, havingValue = "seperate", matchIfMissing = false)
+    public GenericObjectPool ledisSlavePool() {
+        if (null == redisProperties.getCluster()) {
+            return null;
+        }
+        return this.getClusterPool(redisProperties.getCluster().getSlave());
     }
 
     /**
@@ -164,13 +203,14 @@ public class RedisConfig {
      */
     @SuppressWarnings("unchecked")
 //    @RefreshScope
-//    @Bean(name = "ledisMasterClusterConnection")
+    @Bean(name = "ledisMasterClusterConnection")
     @ConditionalOnBean(RedisProperties.class)
+    @ConditionalOnProperty(value = {"spring.redis.cluster.mode"}, havingValue = "normal", matchIfMissing = false)
     public StatefulRedisClusterConnection ledisMasterClusterConnection() {
-        if (null != redisProperties.getCluster()) {
+        if (null == redisProperties.getCluster()) {
             return null;
         }
-        return this.getConnection(redisProperties.getCluster().getMaster(), ReadFrom.MASTER);
+        return this.getClusterConnection(redisProperties.getCluster().getMaster(), ReadFrom.MASTER);
     }
 
     /**
@@ -179,16 +219,23 @@ public class RedisConfig {
      */
     @SuppressWarnings("unchecked")
 //    @RefreshScope
-//    @Bean(name = "ledisSlaveClusterConnection")
+    @Bean(name = "ledisSlaveClusterConnection")
     @ConditionalOnBean(RedisProperties.class)
+    @ConditionalOnProperty(value = {"spring.redis.cluster.mode"}, havingValue = "normal", matchIfMissing = false)
     public StatefulRedisClusterConnection ledisSlaveClusterConnection() {
-        if (null != redisProperties.getCluster()) {
+        if (null == redisProperties.getCluster()) {
             return null;
         }
-        return this.getConnection(redisProperties.getCluster().getSlave(), ReadFrom.SLAVE);
+        return this.getClusterConnection(redisProperties.getCluster().getSlave(), ReadFrom.SLAVE);
     }
 
-    private StatefulRedisClusterConnection getConnection(RedisProperties.Cluster.Nodes nodes, ReadFrom readFrom) {
+    /**
+     * 获取标准主从连接
+     * @param nodes
+     * @param readFrom
+     * @return
+     */
+    private StatefulRedisClusterConnection getClusterConnection(RedisProperties.Cluster.Nodes nodes, ReadFrom readFrom) {
         StatefulRedisClusterConnection<String, String> connection = null;
         if (null != nodes) {
             String strNodes = nodes.getHost();
@@ -220,5 +267,40 @@ public class RedisConfig {
             }
         }
         return connection;
+    }
+
+    /**
+     * 获取非标准主从连接池
+     * @param nodes
+     * @return
+     */
+    private GenericObjectPool getClusterPool(RedisProperties.Cluster.Nodes nodes) {
+        GenericObjectPool<StatefulRedisConnection<String, String>> pool = null;
+
+        if (null != nodes) {
+            StatefulRedisConnection<String, String> connection = null;
+            String strNodes = nodes.getHost();
+            String strPwd = nodes.getPassword();
+            Long timeout = nodes.getTimeout();
+            String[] aryNodes = strNodes.split(",");
+            List<RedisURI> listRedisURIs = new ArrayList<RedisURI>();
+            String[] nodeInfo = null;
+            RedisURI redisURI = null;
+
+            if (StringUtils.isBlank(strPwd)) {
+                strPwd = "";
+            }
+            for (String node : aryNodes) {
+                nodeInfo = node.split(":");
+                // "redis://password@host:port/timeout"
+                redisURI = RedisURI.Builder.redis(nodeInfo[0], Integer.parseInt(nodeInfo[1]))
+                        .withPassword(strPwd).withDatabase(1).withTimeout(timeout, TimeUnit.MILLISECONDS).build();
+                listRedisURIs.add(redisURI);
+            }
+            RedisClient clusterClient = RedisClient.create(listRedisURIs.get(0));
+            pool = ConnectionPoolSupport.createGenericObjectPool(() -> clusterClient.connect(), new GenericObjectPoolConfig());
+        }
+
+        return pool;
     }
 }

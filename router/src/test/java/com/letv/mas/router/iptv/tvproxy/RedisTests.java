@@ -31,11 +31,11 @@ import java.util.Map;
 @SpringBootTest(classes = com.letv.mas.router.iptv.tvproxy.ServiceZuulApplication.class,
         properties = {
                 "spring.profiles.active:tvproxy", "SERVER_PORT:9001", "SERVER_IP:10.58.92.94",
-//                "REDIS_M_NODES:10.124.132.130:6379", "REDIS_M_PASSWORD:aN3eg2Ak@",
-//                "REDIS_S_NODES:10.124.132.130:6379", "REDIS_S_PASSWORD:aN3eg2Ak@"
-                  "REDIS_M_NODES:10.124.132.130:6379",
-                  "REDIS_M_PASSWORD:aN3eg2Ak@",
-                  "REDIS_NODES:10.124.132.130:6379#master1,10.124.132.156:6380"
+                "REDIS_M_NODES:10.124.132.130:6379", "REDIS_M_PASSWORD:aN3eg2Ak@",
+                "REDIS_S_NODES:10.124.132.156:6380", "REDIS_S_PASSWORD:aN3eg2Ak@",
+                "REDIS_M_NODES:10.124.132.130:6379",
+                "REDIS_M_PASSWORD:aN3eg2Ak@",
+//                "REDIS_NODES:10.124.132.130:6379#master1,10.124.132.156:6380"
         },
         webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 public class RedisTests {

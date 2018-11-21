@@ -2,11 +2,15 @@ package com.letv.mas.router.iptv.tvproxy.model.dao.cache;
 
 import com.lambdaworks.redis.LettuceFutures;
 import com.lambdaworks.redis.RedisFuture;
+import com.lambdaworks.redis.api.StatefulRedisConnection;
+import com.lambdaworks.redis.api.async.RedisAsyncCommands;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.cluster.api.async.RedisClusterAsyncCommands;
 import com.letv.mas.router.iptv.tvproxy.config.RedisConfig;
 import com.letv.mas.router.iptv.tvproxy.constant.CacheConsts;
 import com.letv.mas.router.iptv.tvproxy.model.LetvTypeReference;
+import com.letv.mas.router.iptv.tvproxy.util.TimeUtil;
+import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,21 +34,41 @@ public class RedisJsonDao implements ICacheTemplate {
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisJsonDao.class);
     private static final String LOG_TAG = "redis";
 
-//    @Autowired
+    //    @Autowired
     private ApplicationContext applicationContext;
 
-//    @SuppressWarnings("rawtypes")
+    //    @SuppressWarnings("rawtypes")
 //    @Autowired
     private RedisTemplate<String, String> redisTemplate;
+
+    private GenericObjectPool masterPool;
+
+    private GenericObjectPool slavePool;
 
     public RedisJsonDao(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
         StatefulRedisClusterConnection redisClusterConnection = this.getMasterClient();
         if (null == redisClusterConnection) {
-            redisTemplate = (RedisTemplate) applicationContext.getBean("redisCacheTemplate");
-            LOGGER.debug("RedisJsonDao.init(): {}", redisTemplate);
+            masterPool = this.getMasterPool();
+            if (null != masterPool) {
+                slavePool = this.getSlavePool();
+                LOGGER.debug("RedisJsonDao.init(): {}", slavePool);
+            } else {
+                redisTemplate = (RedisTemplate) applicationContext.getBean("redisCacheTemplate");
+                LOGGER.debug("RedisJsonDao.init(): {}", redisTemplate);
+            }
+
         } else {
             LOGGER.debug("RedisJsonDao.init(): {}", redisClusterConnection);
+        }
+    }
+
+    public void destroy() {
+        if (null != this.masterPool) {
+            this.masterPool.close();
+        }
+        if (null != this.slavePool) {
+            this.slavePool.close();
         }
     }
 
@@ -53,39 +77,44 @@ public class RedisJsonDao implements ICacheTemplate {
     }
 
     private StatefulRedisClusterConnection getMasterClient() {
-        StatefulRedisClusterConnection connection = null;
-        try {
-            Object bean = applicationContext.getBean("ledisMasterClusterConnection");
-            if (bean instanceof StatefulRedisClusterConnection) {
-                connection = (StatefulRedisClusterConnection) bean;
-                try {
-                    connection.isOpen();
-                } catch (Exception e) {
-                    connection = null;
-                }
-            }
-        } catch (Exception e) {
-
-        }
-        return connection;
+        return this.getClusterEntity("ledisMasterClusterConnection", StatefulRedisClusterConnection.class);
     }
 
     private StatefulRedisClusterConnection getSlaveClient() {
-        StatefulRedisClusterConnection connection = null;
+        return this.getClusterEntity("ledisSlaveClusterConnection", StatefulRedisClusterConnection.class);
+    }
+
+    private GenericObjectPool getMasterPool() {
+        return this.getClusterEntity("ledisMasterPool", GenericObjectPool.class);
+    }
+
+    private GenericObjectPool getSlavePool() {
+        return this.getClusterEntity("ledisSlavePool", GenericObjectPool.class);
+    }
+
+    private <T> T getClusterEntity(String beanName, Class<T> clazz) {
+        T ret = null;
         try {
-            Object bean = applicationContext.getBean("ledisSlaveClusterConnection");
+            Object bean = applicationContext.getBean(beanName);
             if (bean instanceof StatefulRedisClusterConnection) {
-                connection = (StatefulRedisClusterConnection) bean;
+                ret = (T) bean;
                 try {
-                    connection.isOpen();
+                    ((StatefulRedisClusterConnection) bean).isOpen();
                 } catch (Exception e) {
-                    connection = null;
+                    ret = null;
+                }
+            } else if (bean instanceof GenericObjectPool) {
+                ret = (T) bean;
+                try {
+                    ((GenericObjectPool) bean).getRemoveAbandonedOnBorrow();
+                } catch (Exception e) {
+                    ret = null;
                 }
             }
         } catch (Exception e) {
 
         }
-        return connection;
+        return ret;
     }
 
     @Override
@@ -99,10 +128,12 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("set").append(splitSymbol)
                 .append("key=").append(key).append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             String jsonValue = null;
@@ -120,19 +151,31 @@ public class RedisJsonDao implements ICacheTemplate {
                     operations.set(key, jsonValue);
                 }
             } else {
-                connection = getMasterClient();
-                if (duration > 0 || duration == -1) {
-                    connection.sync().setex(key, duration, jsonValue);
+                if (null != this.masterPool) {
+                    poolConnection = (StatefulRedisConnection<String, String>) this.masterPool.borrowObject();
+                    if (duration > 0 || duration == -1) {
+                        poolConnection.sync().setex(key, duration, jsonValue);
+                    } else {
+                        poolConnection.sync().set(key, jsonValue);
+                    }
                 } else {
-                    connection.sync().set(key, jsonValue);
+                    clusterConnection = getMasterClient();
+                    if (duration > 0 || duration == -1) {
+                        clusterConnection.sync().setex(key, duration, jsonValue);
+                    } else {
+                        clusterConnection.sync().set(key, jsonValue);
+                    }
                 }
             }
             ret = CacheConsts.SUCCESS;
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.masterPool.returnObject(poolConnection);
             }
         }
 
@@ -153,9 +196,11 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("mset").append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             String jsonValue = null;
@@ -181,8 +226,14 @@ public class RedisJsonDao implements ICacheTemplate {
                 if (null != redisTemplate) {
                     redisTemplate.opsForValue().multiSet(jsonMap);
                 } else {
-                    connection = getMasterClient();
-                    connection.sync().mset(jsonMap);
+                    if (null != this.masterPool) {
+                        poolConnection = (StatefulRedisConnection<String, String>) this.masterPool.borrowObject();
+                        poolConnection.sync().mset(jsonMap);
+                    } else {
+                        clusterConnection = getMasterClient();
+                        clusterConnection.sync().mset(jsonMap);
+                    }
+                    ret = CacheConsts.SUCCESS;
                 }
             } else if (duration > 0 || duration == -1) {
                 List<Object> batchData = null;
@@ -213,25 +264,49 @@ public class RedisJsonDao implements ICacheTemplate {
                     }
                 } else {
                     batchData = new ArrayList<Object>();
-                    connection = getMasterClient();
-                    RedisClusterAsyncCommands<String, String> commands = connection.async();
-                    commands.setAutoFlushCommands(false);
-                    List<RedisFuture<String>> futures = new ArrayList<>();
-                    for (Map.Entry<String, T> entry : valueMap.entrySet()) {
-                        if (value instanceof String) {
-                            jsonValue = (String) value;
-                        } else {
-                            jsonValue = CacheConsts.OBJECT_MAPPER.writeValueAsString(value);
+                    if (null != this.masterPool) {
+                        poolConnection = (StatefulRedisConnection<String, String>) this.masterPool.borrowObject();
+                        poolConnection.sync().mset(jsonMap);
+                        RedisAsyncCommands<String, String> commands = poolConnection.async();
+                        commands.setAutoFlushCommands(false);
+                        List<RedisFuture<String>> futures = new ArrayList<>();
+                        for (Map.Entry<String, T> entry : valueMap.entrySet()) {
+                            if (value instanceof String) {
+                                jsonValue = (String) value;
+                            } else {
+                                jsonValue = CacheConsts.OBJECT_MAPPER.writeValueAsString(value);
+                            }
+                            if (futures.add(commands.setex(key, duration, jsonValue))) {
+                                batchData.add(key);
+                            }
                         }
-                        if (futures.add(commands.setex(key, duration, jsonValue))) {
-                            batchData.add(key);
+                        if (batchData.size() > 0) {
+                            commands.setAutoFlushCommands(true);
+                            commands.flushCommands();
+                            ret = LettuceFutures.awaitAll(poolConnection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
+                                    CacheConsts.SUCCESS : CacheConsts.FAIL;
                         }
-                    }
-                    if (batchData.size() > 0) {
-                        commands.setAutoFlushCommands(true);
-                        commands.flushCommands();
-                        ret = LettuceFutures.awaitAll(connection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
-                                CacheConsts.SUCCESS : CacheConsts.FAIL;
+                    } else {
+                        clusterConnection = getMasterClient();
+                        RedisClusterAsyncCommands<String, String> commands = clusterConnection.async();
+                        commands.setAutoFlushCommands(false);
+                        List<RedisFuture<String>> futures = new ArrayList<>();
+                        for (Map.Entry<String, T> entry : valueMap.entrySet()) {
+                            if (value instanceof String) {
+                                jsonValue = (String) value;
+                            } else {
+                                jsonValue = CacheConsts.OBJECT_MAPPER.writeValueAsString(value);
+                            }
+                            if (futures.add(commands.setex(key, duration, jsonValue))) {
+                                batchData.add(key);
+                            }
+                        }
+                        if (batchData.size() > 0) {
+                            commands.setAutoFlushCommands(true);
+                            commands.flushCommands();
+                            ret = LettuceFutures.awaitAll(clusterConnection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
+                                    CacheConsts.SUCCESS : CacheConsts.FAIL;
+                        }
                     }
                     for (Object obj : batchData) {
                         sbKeys.append(obj).append(",");
@@ -245,8 +320,11 @@ public class RedisJsonDao implements ICacheTemplate {
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.masterPool.returnObject(poolConnection);
             }
         }
 
@@ -300,18 +378,25 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("get").append(splitSymbol)
                 .append("key=").append(key).append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             String value = null;
             if (null != redisTemplate) {
                 value = redisTemplate.opsForValue().get(key);
             } else {
-                connection = getSlaveClient();
-                connection.sync().get(key);
+                if (null != this.slavePool) {
+                    poolConnection = (StatefulRedisConnection<String, String>) this.slavePool.borrowObject();
+                    value = poolConnection.sync().get(key);
+                } else {
+                    clusterConnection = getSlaveClient();
+                    value = clusterConnection.sync().get(key);
+                }
             }
             if (null != redisCallBack) {
                 resultData = redisCallBack.parser(value);
@@ -322,8 +407,11 @@ public class RedisJsonDao implements ICacheTemplate {
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.slavePool.returnObject(poolConnection);
             }
         }
 
@@ -382,9 +470,11 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("mget").append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             StringBuilder sbKeys = new StringBuilder();
@@ -437,36 +527,69 @@ public class RedisJsonDao implements ICacheTemplate {
                         }
                     } else {
                         batchData = new ArrayList<Object>();
-                        connection = getSlaveClient();
-                        RedisClusterAsyncCommands<String, String> commands = connection.async();
-                        commands.setAutoFlushCommands(false);
-                        List<RedisFuture<String>> futures = new ArrayList<>();
-                        String value = null;
-                        int index = 0;
-                        for (String key : tmpList) {
-                            if (futures.add(commands.get(key))) {
-                                batchData.add(key);
+                        if (null != this.slavePool) {
+                            poolConnection = (StatefulRedisConnection<String, String>) this.slavePool.borrowObject();
+                            RedisAsyncCommands<String, String> commands = poolConnection.async();
+                            commands.setAutoFlushCommands(false);
+                            List<RedisFuture<String>> futures = new ArrayList<>();
+                            String value = null;
+                            int index = 0;
+                            for (String key : tmpList) {
+                                if (futures.add(commands.get(key))) {
+                                    batchData.add(key);
+                                }
                             }
-                        }
-                        if (batchData.size() > 0) {
-                            commands.setAutoFlushCommands(true);
-                            commands.flushCommands();
-                            ret = LettuceFutures.awaitAll(connection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
-                                    CacheConsts.SUCCESS : CacheConsts.FAIL;
-                            if (CacheConsts.SUCCESS == ret) {
-                                for (RedisFuture future : futures) {
-                                    value = String.valueOf(future.get());
-                                    if (null != value) {
-                                        if (null != redisCallBack) {
-                                            resultData.put(String.valueOf(batchData.get(index++)), redisCallBack.parser(value));
-                                        } else {
-                                            resultData.put(String.valueOf(batchData.get(index++)), CacheConsts.OBJECT_MAPPER.readValue(value, new LetvTypeReference<T>()));
+                            if (batchData.size() > 0) {
+                                commands.setAutoFlushCommands(true);
+                                commands.flushCommands();
+                                ret = LettuceFutures.awaitAll(poolConnection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
+                                        CacheConsts.SUCCESS : CacheConsts.FAIL;
+                                if (CacheConsts.SUCCESS == ret) {
+                                    for (RedisFuture future : futures) {
+                                        value = String.valueOf(future.get());
+                                        if (null != value) {
+                                            if (null != redisCallBack) {
+                                                resultData.put(String.valueOf(batchData.get(index++)), redisCallBack.parser(value));
+                                            } else {
+                                                resultData.put(String.valueOf(batchData.get(index++)), CacheConsts.OBJECT_MAPPER.readValue(value, new LetvTypeReference<T>()));
+                                            }
                                         }
                                     }
                                 }
                             }
+                            futures = null;
+                        } else {
+                            clusterConnection = getSlaveClient();
+                            RedisClusterAsyncCommands<String, String> commands = clusterConnection.async();
+                            commands.setAutoFlushCommands(false);
+                            List<RedisFuture<String>> futures = new ArrayList<>();
+                            String value = null;
+                            int index = 0;
+                            for (String key : tmpList) {
+                                if (futures.add(commands.get(key))) {
+                                    batchData.add(key);
+                                }
+                            }
+                            if (batchData.size() > 0) {
+                                commands.setAutoFlushCommands(true);
+                                commands.flushCommands();
+                                ret = LettuceFutures.awaitAll(clusterConnection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
+                                        CacheConsts.SUCCESS : CacheConsts.FAIL;
+                                if (CacheConsts.SUCCESS == ret) {
+                                    for (RedisFuture future : futures) {
+                                        value = String.valueOf(future.get());
+                                        if (null != value) {
+                                            if (null != redisCallBack) {
+                                                resultData.put(String.valueOf(batchData.get(index++)), redisCallBack.parser(value));
+                                            } else {
+                                                resultData.put(String.valueOf(batchData.get(index++)), CacheConsts.OBJECT_MAPPER.readValue(value, new LetvTypeReference<T>()));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            futures = null;
                         }
-                        futures = null;
                     }
                     for (Object obj : batchData) {
                         sbKeys.append(obj).append(",");
@@ -503,36 +626,69 @@ public class RedisJsonDao implements ICacheTemplate {
                     }
                 } else {
                     batchData = new ArrayList<Object>();
-                    connection = getSlaveClient();
-                    RedisClusterAsyncCommands<String, String> commands = connection.async();
-                    commands.setAutoFlushCommands(false);
-                    List<RedisFuture<String>> futures = new ArrayList<>();
-                    String value = null;
-                    int index = 0;
-                    for (String key : keys) {
-                        if (futures.add(commands.get(key))) {
-                            batchData.add(key);
+                    if (null != this.slavePool) {
+                        poolConnection = (StatefulRedisConnection<String, String>) this.slavePool.borrowObject();
+                        RedisAsyncCommands<String, String> commands = poolConnection.async();
+                        commands.setAutoFlushCommands(false);
+                        List<RedisFuture<String>> futures = new ArrayList<>();
+                        String value = null;
+                        int index = 0;
+                        for (String key : keys) {
+                            if (futures.add(commands.get(key))) {
+                                batchData.add(key);
+                            }
                         }
-                    }
-                    if (batchData.size() > 0) {
-                        commands.setAutoFlushCommands(true);
-                        commands.flushCommands();
-                        ret = LettuceFutures.awaitAll(connection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
-                                CacheConsts.SUCCESS : CacheConsts.FAIL;
-                        if (CacheConsts.SUCCESS == ret) {
-                            for (RedisFuture future : futures) {
-                                value = String.valueOf(future.get());
-                                if (null != value) {
-                                    if (null != redisCallBack) {
-                                        resultData.put(String.valueOf(batchData.get(index++)), redisCallBack.parser(value));
-                                    } else {
-                                        resultData.put(String.valueOf(batchData.get(index++)), CacheConsts.OBJECT_MAPPER.readValue(value, new LetvTypeReference<T>()));
+                        if (batchData.size() > 0) {
+                            commands.setAutoFlushCommands(true);
+                            commands.flushCommands();
+                            ret = LettuceFutures.awaitAll(poolConnection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
+                                    CacheConsts.SUCCESS : CacheConsts.FAIL;
+                            if (CacheConsts.SUCCESS == ret) {
+                                for (RedisFuture future : futures) {
+                                    value = String.valueOf(future.get());
+                                    if (null != value) {
+                                        if (null != redisCallBack) {
+                                            resultData.put(String.valueOf(batchData.get(index++)), redisCallBack.parser(value));
+                                        } else {
+                                            resultData.put(String.valueOf(batchData.get(index++)), CacheConsts.OBJECT_MAPPER.readValue(value, new LetvTypeReference<T>()));
+                                        }
                                     }
                                 }
                             }
                         }
+                        futures = null;
+                    } else {
+                        clusterConnection = getSlaveClient();
+                        RedisClusterAsyncCommands<String, String> commands = clusterConnection.async();
+                        commands.setAutoFlushCommands(false);
+                        List<RedisFuture<String>> futures = new ArrayList<>();
+                        String value = null;
+                        int index = 0;
+                        for (String key : keys) {
+                            if (futures.add(commands.get(key))) {
+                                batchData.add(key);
+                            }
+                        }
+                        if (batchData.size() > 0) {
+                            commands.setAutoFlushCommands(true);
+                            commands.flushCommands();
+                            ret = LettuceFutures.awaitAll(clusterConnection.getTimeout(), TimeUnit.MILLISECONDS, futures.toArray(new RedisFuture[futures.size()])) ?
+                                    CacheConsts.SUCCESS : CacheConsts.FAIL;
+                            if (CacheConsts.SUCCESS == ret) {
+                                for (RedisFuture future : futures) {
+                                    value = String.valueOf(future.get());
+                                    if (null != value) {
+                                        if (null != redisCallBack) {
+                                            resultData.put(String.valueOf(batchData.get(index++)), redisCallBack.parser(value));
+                                        } else {
+                                            resultData.put(String.valueOf(batchData.get(index++)), CacheConsts.OBJECT_MAPPER.readValue(value, new LetvTypeReference<T>()));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        futures = null;
                     }
-                    futures = null;
                     for (Object obj : batchData) {
                         sbKeys.append(obj).append(",");
                     }
@@ -546,8 +702,11 @@ public class RedisJsonDao implements ICacheTemplate {
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.slavePool.returnObject(poolConnection);
             }
         }
 
@@ -563,24 +722,34 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("delete").append(splitSymbol)
                 .append("key=").append(key).append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             if (null != redisTemplate) {
                 redisTemplate.delete(key);
             } else {
-                connection = getMasterClient();
-                connection.sync().del(key);
+                if (null != this.masterPool) {
+                    poolConnection = (StatefulRedisConnection<String, String>) this.masterPool.borrowObject();
+                    poolConnection.sync().del(key);
+                } else {
+                    clusterConnection = getMasterClient();
+                    clusterConnection.sync().del(key);
+                }
             }
             ret = CacheConsts.SUCCESS;
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.masterPool.returnObject(poolConnection);
             }
         }
 
@@ -596,24 +765,34 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("sismember").append(splitSymbol)
                 .append("key=").append(key).append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             if (null != redisTemplate) {
                 redisTemplate.opsForSet().isMember(key, member);
             } else {
-                connection = getSlaveClient();
-                connection.sync().sismember(key, member);
+                if (null != this.masterPool) {
+                    poolConnection = (StatefulRedisConnection<String, String>) this.masterPool.borrowObject();
+                    poolConnection.sync().sismember(key, member);
+                } else {
+                    clusterConnection = getSlaveClient();
+                    clusterConnection.sync().sismember(key, member);
+                }
             }
             ret = CacheConsts.SUCCESS;
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.masterPool.returnObject(poolConnection);
             }
         }
 
@@ -629,24 +808,34 @@ public class RedisJsonDao implements ICacheTemplate {
         long stime = System.currentTimeMillis();
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
-        sb.append(RedisJsonDao.LOG_TAG).append(splitSymbol)
+        sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
+                .append(RedisJsonDao.LOG_TAG).append(splitSymbol)
                 .append("sadd").append(splitSymbol)
                 .append("key=").append(key).append(splitSymbol);
-        StatefulRedisClusterConnection<String, String> connection = null;
+        StatefulRedisClusterConnection<String, String> clusterConnection = null;
+        StatefulRedisConnection<String, String> poolConnection = null;
 
         try {
             if (null != redisTemplate) {
                 redisTemplate.opsForSet().add(key, member.toArray(new String[member.size()]));
             } else {
-                connection = getMasterClient();
-                connection.sync().sadd(key, member.toArray(new String[member.size()]));
+                if (null != this.masterPool) {
+                    poolConnection = (StatefulRedisConnection<String, String>) this.masterPool.borrowObject();
+                    poolConnection.sync().sadd(key, member.toArray(new String[member.size()]));
+                } else {
+                    clusterConnection = getMasterClient();
+                    clusterConnection.sync().sadd(key, member.toArray(new String[member.size()]));
+                }
             }
             ret = CacheConsts.SUCCESS;
         } catch (Exception e) {
             ret = CacheConsts.ERROR;
         } finally {
-            if (null != connection) {
-                connection.close();
+            if (null != clusterConnection) {
+                clusterConnection.close();
+            }
+            if (null != poolConnection) {
+                this.masterPool.returnObject(poolConnection);
             }
         }
 
