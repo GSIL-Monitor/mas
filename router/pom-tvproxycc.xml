@@ -40,8 +40,11 @@
         <!--idea plugin: https://github.com/mplushnikov/lombok-intellij-plugin/releases-->
         <lombok.version>1.16.20</lombok.version>
         <redis.version>2.1.0.RELEASE</redis.version>
+        <!--<redis.version>1.5.13.RELEASE</redis.version>-->
         <jedis.version>2.9.0</jedis.version>
         <lettuce.version>5.1.2.RELEASE</lettuce.version>
+        <bucket4j.version>0.1.15</bucket4j.version>
+        <ehcache.version>3.6.2</ehcache.version>
     </properties>
 
     <dependencies>
@@ -238,6 +241,25 @@
             <artifactId>lettuce</artifactId>
             <version>4.5.0.Final</version>
         </dependency>
+
+        <!--https://github.com/MarcGiffing/bucket4j-spring-boot-starter-->
+        <!-- https://mvnrepository.com/artifact/com.giffing.bucket4j.spring.boot.starter/bucket4j-spring-boot-starter-springboot1 -->
+        <dependency>
+            <groupId>com.giffing.bucket4j.spring.boot.starter</groupId>
+            <artifactId>bucket4j-spring-boot-starter-springboot1</artifactId>
+            <version>${bucket4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <!--http://www.ehcache.org/documentation/3.6-->
+        <dependency>
+            <groupId>org.ehcache</groupId>
+            <artifactId>ehcache</artifactId>
+            <version>${ehcache.version}</version>
+        </dependency>
+
     </dependencies>
 
     <dependencyManagement>

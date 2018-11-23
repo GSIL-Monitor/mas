@@ -1,3 +1,4 @@
+# ========================= 路由＋负载均衡＋熔断 (B) ========================= #
 zuul:
   debug:
     request: false
@@ -224,3 +225,44 @@ hystrix:
       maximumSize: 500
       # 当设为-1，会使用SynchronousQueue; 值为正则使用LinkedBlcokingQueue；该设置只会在初始化时有效，之后不能修改
       maxQueueSize: 10000
+# ========================= 路由＋负载均衡＋熔断 (E) ========================= #
+
+# ========================= 限流(B) ========================= #
+spring:
+  cache:
+    jcache:
+      config: "classpath:ehcache.xml"
+
+# https://github.com/MarcGiffing/bucket4j-spring-boot-starter
+bucket4j:
+  enabled: true
+  # 过滤器列表，properties用数组表示，如：filters[0]
+  filters:
+  # 缓存key
+  - cache-name: buckets
+    metrics:
+      enabled: false
+    http-response-body: '{"status": 0, "code": "0003" , "msg": "访问限制"}'
+    # 过滤方式[servlet,zuul,webflux]
+    filter-method: servlet
+    # url正则匹配表达式，和zuul的path保持一致
+    url: /iptv/api/**
+    # 值越小越优先
+    filter-order: -1000
+    # 限速策略[first, all]，默认为first，符合第一个执行
+    strategy: first
+    # 限速策略配置列表
+    rate-limits:
+    # 策略类型[default／不区分ip、条件等, ip, expression-直接为引用类方法、属性值]，
+    # expression-refer: https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#expressions
+    # expression-eg: @securityService.username()?: getRemoteAddr()
+    - filter-key-type: ip
+      # 当filter-key-type=expression时，该项为SpEL
+      expression: "getRemoteAddr()"
+      # 带宽配置
+      bandwidths:
+      # 满足策略条件下 x 单位（minutes分钟／seconds秒）内 允许 y 个请求
+      - capacity: 10
+        time: 1
+        unit: minutes
+# ========================= 限流(E) ========================= #

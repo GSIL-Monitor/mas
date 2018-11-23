@@ -7,8 +7,9 @@ import com.lambdaworks.redis.api.StatefulRedisConnection;
 import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.support.ConnectionPoolSupport;
-import com.letv.mas.router.iptv.tvproxy.plugin.redis.RedisProperties;
+import lombok.Data;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.pool2.PooledObjectFactory;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,9 +49,68 @@ public class RedisConfig {
     @Autowired
     RedisProperties redisProperties;
 
+    @Autowired
+    LedisPoolConfig ledisPoolConfig;
+
+    @Data
+    @Primary
+    @Configuration
+    @ConfigurationProperties(prefix = "spring.redis")
+    public static class RedisProperties {
+        private Integer database;
+        private String host;
+        private String password;
+        private Long timeout;
+        private Pool pool;
+        private Cluster cluster;
+        private Sentinel sentinel;
+
+        @Data
+        public static class Pool {
+            private Integer maxIdle;
+            private Integer minIdle;
+            private Integer maxActive;
+            private Integer maxWait;
+            // 连接耗尽时是否阻塞, false报异常,true阻塞直到超时, 默认true
+            private boolean isBlockWhenExhausted = true;
+            // 在borrow一个实例时，是否提前进行alidate操作；如果为true，则得到的实例均是可用的，默认false
+            private boolean isTestOnBorrow = false;
+            // 调用returnObject方法时，是否进行有效检查，默认false
+            private boolean isTestOnReturn = false;
+            // 在空闲时检查有效性, 默认false
+            private boolean isTestWhileIdle = false;
+            // 运行一次空闲连接回收器的间隔；
+            private Long timeBetweenEvictionRunsMillis;
+            // 池中的连接空闲后被回收的间隔，这一项只有在timeBetweenEvictionRunsMillis大于0时才有意义；
+            private Long minEvictableIdleTimeMillis;
+        }
+
+        @Data
+        public static class Cluster {
+            private String mode;
+            private Nodes master;
+            private Nodes slave;
+
+            @Data
+            public static class Nodes {
+                private String host;
+                private String password;
+                private Long timeout;
+            }
+        }
+
+        @Data
+        public static class Sentinel {
+            private String master;
+            private String nodes;
+        }
+    }
+
+    public class LedisPoolConfig extends GenericObjectPoolConfig {}
     @Bean
-    public GenericObjectPoolConfig getRedisConfig() {
-        GenericObjectPoolConfig genericObjectPoolConfig = new GenericObjectPoolConfig();
+    public LedisPoolConfig getRedisConfig() {
+        LedisPoolConfig genericObjectPoolConfig = new LedisPoolConfig();
+        genericObjectPoolConfig.setJmxEnabled(false);
         genericObjectPoolConfig.setMaxIdle(redisProperties.getPool().getMaxIdle());
         genericObjectPoolConfig.setMaxTotal(redisProperties.getPool().getMaxActive());
         genericObjectPoolConfig.setMinIdle(redisProperties.getPool().getMinIdle());
@@ -65,7 +126,7 @@ public class RedisConfig {
 
     @Bean
     @Primary
-    public DefaultLettucePool getDefaultLettucePool(GenericObjectPoolConfig poolConfig) {
+    public DefaultLettucePool getDefaultLettucePool(LedisPoolConfig poolConfig) {
         String[] node = null;
         DefaultLettucePool defaultLettucePool = null;
         if (null == redisProperties.getSentinel()) {
@@ -160,8 +221,8 @@ public class RedisConfig {
      * @param redisTemplate
      * @return
      */
-//    @Bean
-    public RedisCacheManager getRedisCacheManager(RedisTemplate<String, Object> redisTemplate) {
+    @Bean
+    public RedisCacheManager getRedisCacheManager(RedisTemplate redisTemplate) {
         return new RedisCacheManager(redisTemplate);
     }
 
@@ -171,14 +232,15 @@ public class RedisConfig {
      */
     @SuppressWarnings("unchecked")
 //    @RefreshScope
+    @Primary
     @Bean(name = "ledisMasterPool")
-    @ConditionalOnBean(RedisProperties.class)
+    @ConditionalOnBean(LedisPoolConfig.class)
     @ConditionalOnProperty(value = {"spring.redis.cluster.mode"}, havingValue = "seperate", matchIfMissing = false)
-    public GenericObjectPool ledisMasterPool() {
+    public GenericObjectPool ledisMasterPool(LedisPoolConfig poolConfig) {
         if (null == redisProperties.getCluster()) {
             return null;
         }
-        return this.getClusterPool(redisProperties.getCluster().getMaster());
+        return this.getClusterPool(redisProperties.getCluster().getSlave(), poolConfig);
     }
 
     /**
@@ -188,13 +250,13 @@ public class RedisConfig {
     @SuppressWarnings("unchecked")
 //    @RefreshScope
     @Bean(name = "ledisSlavePool")
-    @ConditionalOnBean(RedisProperties.class)
+    @ConditionalOnBean(LedisPoolConfig.class)
     @ConditionalOnProperty(value = {"spring.redis.cluster.mode"}, havingValue = "seperate", matchIfMissing = false)
-    public GenericObjectPool ledisSlavePool() {
+    public GenericObjectPool ledisSlavePool(LedisPoolConfig poolConfig) {
         if (null == redisProperties.getCluster()) {
             return null;
         }
-        return this.getClusterPool(redisProperties.getCluster().getSlave());
+        return this.getClusterPool(redisProperties.getCluster().getSlave(), poolConfig);
     }
 
     /**
@@ -274,7 +336,7 @@ public class RedisConfig {
      * @param nodes
      * @return
      */
-    private GenericObjectPool getClusterPool(RedisProperties.Cluster.Nodes nodes) {
+    private GenericObjectPool getClusterPool(RedisProperties.Cluster.Nodes nodes, LedisPoolConfig poolConfig) {
         GenericObjectPool<StatefulRedisConnection<String, String>> pool = null;
 
         if (null != nodes) {
@@ -298,7 +360,7 @@ public class RedisConfig {
                 listRedisURIs.add(redisURI);
             }
             RedisClient clusterClient = RedisClient.create(listRedisURIs.get(0));
-            pool = ConnectionPoolSupport.createGenericObjectPool(() -> clusterClient.connect(), new GenericObjectPoolConfig());
+            pool = ConnectionPoolSupport.createGenericObjectPool(() -> clusterClient.connect(), poolConfig);
         }
 
         return pool;

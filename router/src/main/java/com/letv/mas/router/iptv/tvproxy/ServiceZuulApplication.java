@@ -3,6 +3,7 @@ package com.letv.mas.router.iptv.tvproxy;
 import com.letv.mas.router.iptv.tvproxy.interceptor.HttpClientLoggingInterceptor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +18,11 @@ import java.util.Collections;
 @EnableZuulProxy
 @EnableEurekaClient
 @SpringBootApplication
-@ComponentScan(basePackages = { "com.letv.mas.common.config.monitor.influxdb", "com.letv.mas.router.config", "com.letv.mas.router.iptv.tvproxy"})
+@ComponentScan(basePackages = {
+        "com.letv.mas.common.config.monitor.influxdb",
+        "com.letv.mas.router.config",
+        "com.letv.mas.router.iptv.tvproxy"})
+@EnableCaching
 public class ServiceZuulApplication {
 
     @Bean

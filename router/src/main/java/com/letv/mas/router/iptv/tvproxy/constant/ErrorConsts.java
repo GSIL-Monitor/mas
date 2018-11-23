@@ -13,9 +13,10 @@ public class ErrorConsts {
     public static String DEFAULT_CODE = "0000";
 
     // 公用（00开头）
-    public static String COM_OK = "0001";// 成功
-    public static String COM_UNLOGIN = "0002";// 未登录
-    public static String COM_FAIL = "0003";// 内部错误
+    public static String COM_OK = "0001"; // 成功
+    public static String COM_FAIL = "0002"; // 内部错误
+    public static String COM_ACCESS_LIMITED = "0003"; // 访问限制
+    public static String COM_ACCESS_UNLOGIN = "0004"; // 未登录
 
     // 用户（10开头）
     public static String USER_LOGIN_INCORRECT = "1001";// 登录名或密码不正确
@@ -25,8 +26,9 @@ public class ErrorConsts {
     static {
         errorCodeMap.put(DEFAULT_CODE, "未知异常");
         errorCodeMap.put(COM_OK, "成功");
-        errorCodeMap.put(COM_UNLOGIN, "未登录");
         errorCodeMap.put(COM_FAIL, "内部错误");
+        errorCodeMap.put(COM_ACCESS_UNLOGIN, "未登录");
+        errorCodeMap.put(COM_ACCESS_LIMITED, "内部错误");
         errorCodeMap.put(USER_LOGIN_INCORRECT, "登录名或密码不正确");
     }
 

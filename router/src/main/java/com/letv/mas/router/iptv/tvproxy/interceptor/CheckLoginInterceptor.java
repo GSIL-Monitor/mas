@@ -33,7 +33,7 @@ public class CheckLoginInterceptor implements HandlerInterceptor {
         CheckLoginInterceptorAnnotation annotation = method.getMethodAnnotation(CheckLoginInterceptorAnnotation.class);
         if (annotation != null) {
             if (!this.isLogin(request)) {
-                ErrorConsts.throwException(ErrorConsts.COM_UNLOGIN);
+                ErrorConsts.throwException(ErrorConsts.COM_ACCESS_UNLOGIN);
             }
         }
         return true;

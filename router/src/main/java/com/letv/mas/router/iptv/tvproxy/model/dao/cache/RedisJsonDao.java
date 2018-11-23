@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.*;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
  * Created by leeco on 18/11/11.
  * Based on the lettuce client!
  */
+@Lazy
 @Component
 @ConditionalOnBean(RedisConfig.class)
 public class RedisJsonDao implements ICacheTemplate {
@@ -52,7 +54,7 @@ public class RedisJsonDao implements ICacheTemplate {
             masterPool = this.getMasterPool();
             if (null != masterPool) {
                 slavePool = this.getSlavePool();
-                LOGGER.debug("RedisJsonDao.init(): {}", slavePool);
+                LOGGER.debug("RedisJsonDao.init(): {}", masterPool);
             } else {
                 redisTemplate = (RedisTemplate) applicationContext.getBean("redisCacheTemplate");
                 LOGGER.debug("RedisJsonDao.init(): {}", redisTemplate);
