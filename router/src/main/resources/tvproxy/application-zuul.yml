@@ -87,6 +87,20 @@ zuul:
 #    r-local:
 #      path: '/i/**'
 #      url: forward:/i
+#  zuul:
+#    ratelimit:
+#      key-prefix: MAS_ROUTER_TVPROXY_
+#      enabled: true
+#      repository: BUCKET4J_JCACHE
+#      behind-proxy: false
+#      default-policy-list: #optional - will apply unless specific policy exists
+#        - limit: 10 #optional - request number limit per refresh interval window
+##          quota: 1000 #optional - request time limit per refresh interval window (in seconds)
+#          refresh-interval: 60 #default value (in seconds)
+#          type: #optional
+#            - user=anonymous
+#            - origin
+#            - url=/iptv/api/**
 
 # Ribbon 全局配置
 ribbon:
@@ -228,12 +242,28 @@ hystrix:
 # ========================= 路由＋负载均衡＋熔断 (E) ========================= #
 
 # ========================= 限流(B) ========================= #
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+
+# --SpringBoot2--
+#spring:
+#  cache:
+#    jcache:
+#      config: "classpath:ehcache-v3.xml"
+# --SpringBoot1--
 spring:
   cache:
+    type: CAFFEINE
     jcache:
-      config: "classpath:ehcache.xml"
+      provider: com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider
+    cache-names:
+    - buckets
+    caffeine:
+      spec: maximumSize=1000000,expireAfterAccess=3600s
 
-# https://github.com/MarcGiffing/bucket4j-spring-boot-starter
 bucket4j:
   enabled: true
   # 过滤器列表，properties用数组表示，如：filters[0]
@@ -248,7 +278,7 @@ bucket4j:
     # url正则匹配表达式，和zuul的path保持一致
     url: /iptv/api/**
     # 值越小越优先
-#    filter-order: -1000
+    filter-order: -1000
     # 限速策略[first, all]，默认为first，符合第一个执行
     strategy: first
     # 限速策略配置列表
@@ -261,7 +291,7 @@ bucket4j:
       expression: "getRemoteAddr()"
       # 带宽配置
       bandwidths:
-      # 满足策略条件下 x 单位（minutes分钟／seconds秒）内 允许 y 个请求
+      # 满足策略条件下 x 单位（minutes 分钟／seconds 秒）内 允许 y 个请求
       - capacity: 10
         time: 1
         unit: minutes

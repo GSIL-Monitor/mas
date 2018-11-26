@@ -356,7 +356,8 @@ public class RedisConfig {
                 nodeInfo = node.split(":");
                 // "redis://password@host:port/timeout"
                 redisURI = RedisURI.Builder.redis(nodeInfo[0], Integer.parseInt(nodeInfo[1]))
-                        .withPassword(strPwd).withDatabase(1).withTimeout(timeout, TimeUnit.MILLISECONDS).build();
+                        .withPassword(strPwd).withDatabase(redisProperties.getDatabase())
+                        .withTimeout(timeout, TimeUnit.MILLISECONDS).build();
                 listRedisURIs.add(redisURI);
             }
             RedisClient clusterClient = RedisClient.create(listRedisURIs.get(0));
