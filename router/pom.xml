@@ -10,7 +10,7 @@
     <packaging>jar</packaging>
 
     <name>mas-router-tvproxy</name>
-    <description>Project for the tvproxy based on mas router with SC-config</description>
+    <description>Project for the tvproxy based on mas router with apollo-config</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -22,7 +22,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.plugin>3.8.0</maven.compiler.plugin>
+        <maven.compiler.plugin>2.5.1</maven.compiler.plugin>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <slf4j.version>1.7.25</slf4j.version>
@@ -37,10 +37,9 @@
         <druid.starter.version>1.1.10</druid.starter.version>
         <mybatis.version>1.3.2</mybatis.version>
         <jjwt.version>0.9.1</jjwt.version>
-        <!--idea plugin: https://github.com/mplushnikov/lombok-intellij-plugin/releases-->
         <lombok.version>1.16.20</lombok.version>
+        <mas.apollo>1.1.2-SNAPSHOT</mas.apollo>
         <redis.version>2.1.0.RELEASE</redis.version>
-        <!--<redis.version>1.5.13.RELEASE</redis.version>-->
         <jedis.version>2.9.0</jedis.version>
         <lettuce.version>5.1.2.RELEASE</lettuce.version>
         <bucket4j.version>0.1.15</bucket4j.version>
@@ -97,9 +96,16 @@
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
         </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.springframework.cloud</groupId>-->
+            <!--<artifactId>spring-cloud-starter-config</artifactId>-->
+        <!--</dependency>-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
+            <groupId>com.letv.micro.apollo</groupId>
+            <artifactId>micro-apollo-spring-boot-starter</artifactId>
+            <version>${mas.apollo}</version>
+            <!--<scope>system</scope>-->
+            <!--<systemPath>${project.basedir}/../micro-apollo-spring-boot-starter/target/micro-apollo-spring-boot-starter-1.1.2-SNAPSHOT.jar</systemPath>-->
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -125,6 +131,12 @@
             <version>${mas.common}</version>
             <!--<scope>system</scope>-->
             <!--<systemPath>${project.basedir}/../common/target/common-1.0-SNAPSHOT.jar</systemPath>-->
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.cloud</groupId>
+                    <artifactId>spring-cloud-starter-config</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--letv工具包（E）-->
         <dependency>
@@ -230,9 +242,9 @@
         <!--<version>${jedis.version}</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-            <!--<groupId>io.lettuce</groupId>-->
-            <!--<artifactId>lettuce-core</artifactId>-->
-            <!--<version>${lettuce.version}</version>-->
+        <!--<groupId>io.lettuce</groupId>-->
+        <!--<artifactId>lettuce-core</artifactId>-->
+        <!--<version>${lettuce.version}</version>-->
         <!--</dependency>-->
         <!--spring-data 2.0以下版本，需要使用此包，否则会报com.lambdaworks.redis.AbstractRedisClient异常！-->
         <!--https://paluch.biz/blog/173-redis-client-lettuce-5-ga-released.html-->
@@ -249,14 +261,14 @@
             <artifactId>bucket4j-spring-boot-starter</artifactId>
             <!--<artifactId>bucket4j-spring-boot-starter-springboot1</artifactId>-->
             <!--<version>${bucket4j.version}</version>-->
-            <version>0.0.13</version>
+            <version>0.1.3</version>
         </dependency>
         <!--https://github.com/marcosbarbero/spring-cloud-zuul-ratelimit-->
         <!-- https://mvnrepository.com/artifact/com.marcosbarbero.cloud/spring-cloud-zuul-ratelimit-core -->
         <!--<dependency>-->
-            <!--<groupId>com.marcosbarbero.cloud</groupId>-->
-            <!--<artifactId>spring-cloud-zuul-ratelimit-core</artifactId>-->
-            <!--<version>1.7.2.RELEASE</version>-->
+        <!--<groupId>com.marcosbarbero.cloud</groupId>-->
+        <!--<artifactId>spring-cloud-zuul-ratelimit-core</artifactId>-->
+        <!--<version>1.7.2.RELEASE</version>-->
         <!--</dependency>-->
         <!-- https://mvnrepository.com/artifact/com.github.vladimir-bukhtoyarov/bucket4j-core -->
         <dependency>
@@ -276,9 +288,9 @@
         <!--http://www.ehcache.org/documentation/3.6-->
         <!--http://www.ehcache.org/generated/2.10.4/html/ehc-all-->
         <!--<dependency>-->
-            <!--<groupId>org.ehcache</groupId>-->
-            <!--<artifactId>ehcache</artifactId>-->
-            <!--<version>${ehcache.version}</version>-->
+        <!--<groupId>org.ehcache</groupId>-->
+        <!--<artifactId>ehcache</artifactId>-->
+        <!--<version>${ehcache.version}</version>-->
         <!--</dependency>-->
         <!--ehcache3.x依赖jsr107-->
         <dependency>
@@ -362,10 +374,6 @@
                 <configuration>
                     <source>${maven.compiler.source}</source>
                     <target>${maven.compiler.target}</target>
-                    <!--剔除包内部分包含外部差异化依赖的类文件-->
-                    <excludes>
-                        <exclude>**/config/ZuulConfig.java</exclude>
-                    </excludes>
                     <showWarnings>true</showWarnings>
                     <skip>true</skip>
                 </configuration>
