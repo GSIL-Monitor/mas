@@ -38,7 +38,7 @@ public class DruidLogFilter extends FilterEventAdapter {
         String splitSymbol = "|";
         super.statementExecuteAfter(statement, sql, result);
         long time = System.currentTimeMillis() - stime;
-        if (LOGGER.isInfoEnabled() && null != statement && null != statement.getRawObject()) {
+        /*if (LOGGER.isInfoEnabled() && null != statement && null != statement.getRawObject()) {
             String sqlStr = statement.getRawObject().toString().replaceAll("[\\s]+", " ").replaceFirst(".*: ", "");
             sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
                     .append(LOG_TAG).append(splitSymbol)
@@ -46,7 +46,7 @@ public class DruidLogFilter extends FilterEventAdapter {
                     .append(time).append(splitSymbol)
                     .append(result ? 1 : 0);
             LOGGER.info(sb.toString());
-        }
+        }*/
         if (time > 200) {
             LOGGER.info("[sql-slow]:sql=" + sql + "|time=" + time + "ms");
         }
@@ -58,7 +58,7 @@ public class DruidLogFilter extends FilterEventAdapter {
         StringBuilder sb = new StringBuilder();
         String splitSymbol = "|";
         super.statement_executeErrorAfter(statement, sql, error);
-        if (LOGGER.isInfoEnabled() && null != statement && null != statement.getRawObject()) {
+        /*if (LOGGER.isInfoEnabled() && null != statement && null != statement.getRawObject()) {
             String sqlStr = statement.getRawObject().toString().replaceAll("[\\s]+", " ").replaceFirst(".*: ", "");
             sqlStr = sqlStr + error.getMessage();
             sb.append(TimeUtil.getISO8601Timestamp(new Date())).append(splitSymbol)
@@ -67,7 +67,7 @@ public class DruidLogFilter extends FilterEventAdapter {
                     .append(System.currentTimeMillis() - stime).append(splitSymbol)
                     .append(-1);
             LOGGER.info(sb.toString());
-        }
+        }*/
         String logPrefix = "DruidLogFilter|intercept|sql=" + sql;
         if (error instanceof SQLTimeoutException) {
             LOGGER.error("[sql-err-timeout]: sql=" + sql, error);

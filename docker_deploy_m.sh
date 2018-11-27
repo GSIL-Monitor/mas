@@ -25,6 +25,8 @@ for arg in "$@"; do
       jmxport=$value;;
     --project_net)
       project_net=$value;;
+    --local)
+      local=$value;;
     --help)
       echo "args:"
       echo "--module="
@@ -106,8 +108,8 @@ else
     run_docker_net="--net=$project_net"
 fi
 
-docker_deploy="sh ${cur_dir}/docker_deploy.sh --image=${docker_hub_host}${docker_hub_path}${app_base} --app=${app} --run_opts='-v ${app_base_path}/${app}:/letv/app/mas/${module} -v ${log_base_path}/${app}:/letv/logs/mas/${module} -p ${port}:${port} ${run_jmx} ${run_env} ${run_hosts} ${run_docker_net} --restart=always' --port=${port} --turl='${tsurl}'"
-
+docker_deploy="sh ${cur_dir}/docker_deploy.sh --image=${docker_hub_host}${docker_hub_path}${app_base} --app=${app} --run_opts='-v ${app_base_path}/${app}:/letv/app/mas/${module} -v ${log_base_path}/${app}:/letv/logs/mas/${module} -p ${port}:${port} ${run_jmx} ${run_env} ${run_hosts} ${run_docker_net} ' --port=${port} --turl='${tsurl}' --local=${local} "
+#--restart=always
 echo "${docker_deploy}"
 echo "docker deploy ..."
 eval "$docker_deploy"

@@ -23,7 +23,7 @@
         id,client_name,user_id,en_name,client_id,client_secret,create_time,update_time,end_time,status,cause,flag
     </sql>
 
-    <select id="userApplications" resultMap="clientMap">
+    <select id="userApplications" resultType="com.letv.mas.router.omp.model.dto.ClientDto">
         select
         <include refid="client"/>
         from oauth_client where user_id=#{token} limit #{startIndex},#{size}

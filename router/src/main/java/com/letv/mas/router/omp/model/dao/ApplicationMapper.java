@@ -10,7 +10,7 @@ import java.util.List;
 
 @Mapper
 public interface ApplicationMapper {
-    List<ClientDo> userApplications(@Param("startIndex") int i, @Param("size") int pageSize, @Param("token") String token);
+    List<ClientDto> userApplications(@Param("startIndex") int i, @Param("size") int pageSize, @Param("token") String token);
 
     int updateApplciation(@Param("id") String id, @Param("client_name") String client_name, @Param("en_name") String en_name, @Param("client_id") String client_id, @Param("client_secret") String client_secret, @Param("update_time") Timestamp update_time, @Param("status") int i);
 

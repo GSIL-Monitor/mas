@@ -15,6 +15,7 @@ public class ClientDto {
     private Timestamp end_time;
     private int status;
     private String cause;
+    private String desc;
     private String user;
     private int flag;
 
@@ -112,6 +113,14 @@ public class ClientDto {
 
     public void setUser(String user) {
         this.user = user;
+    }
+
+    public String getDesc() {
+        return desc;
+    }
+
+    public void setDesc(String desc) {
+        this.desc = desc;
     }
 
     public int getFlag() {

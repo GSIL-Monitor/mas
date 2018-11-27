@@ -23,6 +23,8 @@ for arg in "$@"; do
       jmxport=$value;;
     --project_net)
       project_net=$value;;
+    --local)
+      local=$value;;
     --help)
       echo "args:"
       echo "--module="
@@ -31,6 +33,7 @@ for arg in "$@"; do
       echo "--zone="
       echo "--region="
       echo "--jmxport="
+      echo "--local="
       echo "--help"
       exit 0;;
   esac
@@ -65,7 +68,7 @@ fi
 
 if [ -f "${env_file}" ]; then
     echo "${env_file}"
-    docker_deploy="sh ${cur_dir}/docker_deploy_m.sh --module=${module} --port=${port} --zone=${zone} --region=${region} --env_file=${env_file} --hosts_file=${hosts_file} --jmxport=${jmxport} --project_net=${project_net}"
+    docker_deploy="sh ${cur_dir}/docker_deploy_m.sh --module=${module} --port=${port} --zone=${zone} --region=${region} --env_file=${env_file} --hosts_file=${hosts_file} --jmxport=${jmxport} --project_net=${project_net} --local=${local}"
     eval "$docker_deploy"
 else
     echo "[error]the file[${env_file}] was not existed!"

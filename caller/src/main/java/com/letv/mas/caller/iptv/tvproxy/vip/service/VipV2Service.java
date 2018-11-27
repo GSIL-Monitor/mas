@@ -1415,7 +1415,7 @@ public class VipV2Service extends BaseService {
                         jumpData.setType(dataType);
                         jumpData.setExtend(extend);
                         if (StringUtil.isNotBlank(position)) {
-                            LOG.error("getCashierIdForNoKnow native cashier_id=" + pilotDto_skip.getActivityIds()
+                            LOG.info("getCashierIdForNoKnow native cashier_id=" + pilotDto_skip.getActivityIds()
                                     + " pos=" + position + " mac=" + commonParam.getMac() + " uid="
                                     + commonParam.getUserId());
                         }
@@ -1461,7 +1461,7 @@ public class VipV2Service extends BaseService {
                         jumpData.setExtend(extend);
                         if (StringUtil.isNotBlank(position) && StringUtil.isNotBlank(browser_skip.getUrl())
                                 && browser_skip.getUrl().indexOf("cashierId=") > 0) {
-                            LOG.error("getCashierIdForNoKnow h5 cashier_url=" + browser_skip.getUrl() + " pos="
+                            LOG.info("getCashierIdForNoKnow h5 cashier_url=" + browser_skip.getUrl() + " pos="
                                     + position + " mac=" + commonParam.getMac() + " uid=" + commonParam.getUserId());
                         }
                     } else if (type == DataConstant.DATA_TYPE_ALBUM) {
@@ -1559,7 +1559,7 @@ public class VipV2Service extends BaseService {
                         return jumpData;
                     }
                     if (StringUtil.isNotBlank(position)) {
-                        LOG.error("getCashierIdForNoKnow other jump =" + params + " pos=" + position + " mac="
+                        LOG.info("getCashierIdForNoKnow other jump =" + params + " pos=" + position + " mac="
                                 + commonParam.getMac() + " uid=" + commonParam.getUserId());
                     }
                     GcParams gcParams = JsonUtil.parse(params, GcParams.class);

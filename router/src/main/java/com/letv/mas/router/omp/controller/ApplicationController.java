@@ -40,8 +40,8 @@ public class ApplicationController {
     }
 
     @RequestMapping("/passApplications")
-    public BaseResponseDto passApplications(String id, @RequestParam String client_id, @RequestParam String en_name, @RequestParam String user_id) {
-        return applicationService.passApplications(id, client_id, en_name, user_id);
+    public BaseResponseDto passApplications(String id, @RequestParam String client_secret, @RequestParam String client_id, @RequestParam String en_name, @RequestParam String user_id) {
+        return applicationService.passApplications(id, client_id, en_name, user_id,client_secret);
     }
 
     @RequestMapping("/deleteApplications")

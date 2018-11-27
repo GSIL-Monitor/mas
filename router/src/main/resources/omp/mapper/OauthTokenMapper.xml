@@ -30,4 +30,16 @@
     <update id="startUseApplications">
         update oauth_token set is_del = 0,access_token=#{token},refresh_token=#{refresh_token},expires=#{expires} where user_id=#{user_id} and client_id=#{client_id}
     </update>
+
+    <select id="userApplicationsToken" resultMap="authMap">
+        select <include refid="auth"/> from oauth_token where user_id=#{user_id}
+    </select>
+
+    <update id="refreshUseApplication">
+        update oauth_token set access_token=#{access_token},refresh_token=#{refresh_token},expires=#{expires} where user_id=#{user_id} and client_id=#{client_id}
+    </update>
+
+    <select id="findAllUserAccessToken" resultMap="authMap">
+        select <include refid="auth"/> from oauth_token
+    </select>
 </mapper>

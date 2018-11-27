@@ -40,17 +40,30 @@ public class ApplicationService {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        List<ClientDo> clientDtos = applicationMapper.userApplications(pageSize * (pageNum - 1), pageSize, token);
+        List<ClientDto> clientDtos = applicationMapper.userApplications(pageSize * (pageNum - 1), pageSize, token);
         if (clientDtos != null) {
             response.setStatus(1);
             if (clientDtos.size() != 0) {
+                List<OauthTokenDo> userToken = oauthTokenMapper.userApplicationsToken(token);
+                setDescAsToken(clientDtos, userToken);
                 response.setData(clientDtos);
             }
         } else {
             response.setStatus(0);
         }
-        System.out.println(response.getData());
         return response;
+    }
+
+    private void setDescAsToken(List<ClientDto> clientDtos, List<OauthTokenDo> userToken) {
+        if(userToken != null && userToken.size() != 0){
+            for (int i = 0; i < clientDtos.size(); i++) {
+                for (int j = 0; j < userToken.size(); j++) {
+                    if(clientDtos.get(i).getClient_id().equals(userToken.get(j).getClient_id())){
+                        clientDtos.get(i).setDesc(userToken.get(j).getAccess_token());
+                    }
+                }
+            }
+        }
     }
 
     public BaseResponseDto updateApplications(String client_secret, String id, String client_name, String en_name, String user_id) {
@@ -85,9 +98,9 @@ public class ApplicationService {
 
     private boolean checkClientNameRepeat(String id, String en_name, String user_id, BaseResponseDto response) {
         ClientDo clientDo = applicationMapper.checkClientNameRepeat(id);
-        List<ClientDo> clientDos = applicationMapper.userApplications(0, 20, user_id);
+        List<ClientDto> clientDos = applicationMapper.userApplications(0, 20, user_id);
         if (clientDo != null && clientDos != null && clientDos.size() != 0) {
-            for (ClientDo client : clientDos) {
+            for (ClientDto client : clientDos) {
                 if (client.getEn_name().equals(en_name)) {
                     if (clientDo.getId().equals(client.getId())) {
                         return false;
@@ -106,9 +119,9 @@ public class ApplicationService {
     }
 
     private boolean checkClientNameRepeat(String en_name, String user_id, BaseResponseDto response) {
-        List<ClientDo> clientDos = applicationMapper.userApplications(0, 20, user_id);
+        List<ClientDto> clientDos = applicationMapper.userApplications(0, 20, user_id);
         if (clientDos != null && clientDos.size() != 0) {
-            for (ClientDo client : clientDos) {
+            for (ClientDto client : clientDos) {
                 if (client.getEn_name().equals(en_name)) {
                     response.setStatus(0);
                     response.setCode(StatusCode.CLIENT_NAME_REPEAT);
@@ -123,6 +136,8 @@ public class ApplicationService {
     public BaseResponseDto allApplications(int pageSize, int pageNum) {
         BaseResponseDto response = new BaseResponseDto();
         List<ClientDto> clientDtos = applicationMapper.allApplications(pageSize * (pageNum - 1), pageSize);
+        List<OauthTokenDo> userToken = oauthTokenMapper.findAllUserAccessToken();
+        setDescAsToken(clientDtos,userToken);
         replaceUserName(response, clientDtos);
         return response;
     }
@@ -157,7 +172,7 @@ public class ApplicationService {
         return response;
     }
 
-    public BaseResponseDto passApplications(String id, String client_id, String en_name, String user_id) {
+    public BaseResponseDto passApplications(String id, String client_id, String en_name, String user_id,String client_secret) {
         BaseResponseDto response = new BaseResponseDto();
         OauthTokenDo auth = new OauthTokenDo();
         auth.setClient_id(client_id);
@@ -165,7 +180,12 @@ public class ApplicationService {
         auth.setScope(en_name);
         Long appCode = System.currentTimeMillis() + 1 * 60 * 1000;
         JwtTokenUtil util = new JwtTokenUtil();
-        String token = util.genToken(appCode + "");
+        String token = null;
+        if(StringUtils.isNotBlank(client_secret)){
+            token = util.genToken(appCode + "",client_secret);
+        }else {
+            token = util.genToken(appCode + "");
+        }
         auth.setAccess_token(token);
         String refresh_token = util.refreshToken(token);
         auth.setRefresh_token(refresh_token);

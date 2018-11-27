@@ -30,6 +30,8 @@ for arg in "$@"; do
       port=$value;;
     --turl)
       turl=$value;;
+    --local)
+      local=$value;;
     --help)
       echo "args eg.:"
       echo "--image='reg-sre.lecloud.com/test_image/letv-mas-manager'"
